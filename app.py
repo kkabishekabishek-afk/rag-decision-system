@@ -12,7 +12,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.agents.adaptive_workflow import run_workflow
-from src.rag.vector_store import index_pdf, collection, CHROMA_PATH
+from src.rag.vector_store import index_pdf
+from src.rag.chroma_helper import get_documents_dir, get_chroma_client_and_collection
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -262,10 +263,8 @@ st.markdown("""
 # SESSION STATE INITIALIZATION
 # ============================================================
 if "active_document" not in st.session_state:
-    # Auto-detect existing PDFs in data/documents
-    docs_dir = Path("data") / "documents"
-    docs_dir.mkdir(parents=True, exist_ok=True)
-    existing_docs = [f.name for f in docs_dir.glob("*.pdf")]
+    docs_dir = get_documents_dir()
+    existing_docs = sorted([f.name for f in docs_dir.glob("*.pdf")])
     st.session_state.active_document = existing_docs[0] if existing_docs else None
 
 if "query_history" not in st.session_state:
@@ -300,8 +299,8 @@ with st.sidebar:
     st.markdown("### 🎛️ Control Panel")
     
     # Existing Documents Selector
-    docs_dir = Path("data") / "documents"
-    available_docs = [f.name for f in docs_dir.glob("*.pdf")]
+    docs_dir = get_documents_dir()
+    available_docs = sorted(list(set([f.name for f in docs_dir.glob("*.pdf")])))
     
     if available_docs:
         selected_doc = st.selectbox(
@@ -349,7 +348,8 @@ with st.sidebar:
 
     if uploaded_file is not None:
         if st.button("🚀 Process & Index PDF", use_container_width=True):
-            save_path = docs_dir / uploaded_file.name
+            upload_target_dir = get_documents_dir()
+            save_path = upload_target_dir / uploaded_file.name
             with st.spinner("Processing & embedding document..."):
                 try:
                     with open(save_path, "wb") as f:
@@ -407,13 +407,14 @@ with doc_status_col1:
 
 with doc_status_col2:
     try:
-        total_chunks = len(collection.get(where={"source": st.session_state.active_document})["ids"]) if st.session_state.active_document else 0
+        _, curr_collection, _ = get_chroma_client_and_collection()
+        total_chunks = len(curr_collection.get(where={"source": st.session_state.active_document})["ids"]) if st.session_state.active_document else 0
     except Exception:
         total_chunks = "N/A"
     st.metric(label="Active Chunks", value=str(total_chunks), delta="Indexed in Chroma")
 
 with doc_status_col3:
-    st.metric(label="Inference LLM", value="Llama 3.2", delta="Local Ollama")
+    st.metric(label="Inference Engine", value="Auto Multi-Cloud", delta="Zero-Config Active")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
