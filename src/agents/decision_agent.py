@@ -415,106 +415,43 @@ State uncertainties explicitly.
 
 
 ==================================================
-OUTPUT FORMAT
+==================================================
+OUTPUT FORMAT & SPECIAL INSTRUCTIONS
 ==================================================
 
-DECISION:
+1. TOP-LINE VERDICT HEADER:
+Your response MUST start on the first line with a definitive, prominent verdict:
+`### 🎯 VERDICT: [NOT SUITABLE / SUITABLE / CONDITIONALLY SUITABLE / INSUFFICIENT EVIDENCE]`
+Followed immediately by a 1-2 sentence direct answer to the user's question.
 
-Give the most evidence-supported answer
-to the user's question.
+2. MATHEMATICAL & FINANCIAL LOAN REASONING:
+If the user asks about loan affordability, EMI, tractor/vehicle/machinery purchase, or income suitability:
+- Identify stated income from the document (Gross, Net, Total) and whether it is Annual or Monthly.
+- If Annual: Calculate `Monthly Income = Annual Income / 12`.
+- Compare Monthly Income directly with the requested Monthly EMI.
+- Calculate Monthly Deficit/Surplus (`Monthly Income - Monthly EMI`) and Debt-to-Income (DTI) ratio.
+- Standard safe banking threshold is DTI <= 40%. If EMI > Monthly Income (DTI > 100%), it creates an immediate monthly cash deficit and MUST be marked **NOT SUITABLE**.
+- Use clean plain text arithmetic like `Rs. 32,000 / 12 = Rs. 2,667 per month` (DO NOT use LaTeX equations or backslashes).
 
-If the evidence is insufficient, say:
+3. SUPPORTING EVIDENCE:
+- Bullet points showing the exact figures and statements from the active document.
 
-"A definitive decision cannot be made from
-the available document evidence."
+4. RISK & AFFORDABILITY BREAKDOWN:
+- Highlight debt burden, cash flow shortfall, or operational constraints.
 
+5. ACTIONABLE NEXT STEPS:
+- Realistic options (e.g. extending tenure to lower EMI, government subsidies, rental options, co-borrowers).
 
-SUPPORTING EVIDENCE:
-
-List the most relevant evidence from the
-documents.
-
-Use only evidence that actually supports
-the decision.
-
-
-RISKS:
-
-List important risks or limitations that
-affect the decision.
-
-Do not invent risks.
-
-
-UNCERTAINTIES:
-
-List important information that is missing,
-ambiguous, or uncertain.
-
-Remember:
-
-Missing information is NOT negative evidence.
-
-
-POSSIBLE SOLUTIONS:
-
-List relevant solutions or actions from the
-Solution Agent only when they are reasonably
-supported by the evidence.
-
-Clearly distinguish inferred solutions from
-solutions explicitly stated in the documents.
-
-
-CONCLUSION:
-
-Give a concise final conclusion.
-
-The conclusion must agree with the evidence,
-risks, and uncertainties.
-
-
-==================================================
-FINAL REQUIREMENT
-==================================================
-
-The answer must remain domain-independent.
-
-Do not assume the document is a:
-
-- resume
-- business report
-- financial report
-- technical report
-- research paper
-- policy
-- contract
-- project report
-
-Determine the context only from the supplied
-documents and the user's question.
-
-Never create a negative conclusion simply
-because information is missing.
-
-Prefer:
-
-"Insufficient evidence to determine X"
-
-over:
-
-"X is lacking"
-
-when the document does not explicitly
-establish that X is lacking.
+6. CONCLUSION:
+- A concise concluding summary.
 """
-
 
     # ======================================
     # CALL OLLAMA
     # ======================================
 
     return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
+
 
 
 # ==========================================

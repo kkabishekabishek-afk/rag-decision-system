@@ -33,11 +33,19 @@ def rule_based_classification(question):
         r"\badvantage\b",
         r"\bdisadvantage\b",
         r"\bdecision\b",
+        r"\bloan\b",
+        r"\bafford\b",
+        r"\bbuy\b",
+        r"\btractor\b",
+        r"\bemi\b",
+        r"\bcan i\b",
+        r"\bfeasible\b",
     ]
 
     for pattern in decision_patterns:
         if re.search(pattern, q):
             return "DECISION"
+
 
 
     # -------------------------------------------------

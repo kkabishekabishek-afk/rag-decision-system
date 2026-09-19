@@ -171,12 +171,17 @@ STRICT RULES
     "No meaningful risk identified from
     the available document evidence."
 
-14. Keep the analysis concise and
-    evidence-grounded.
+14. For financial, loan, or purchasing decisions:
+    - Evaluate Debt-to-Income (DTI) impact and monthly repayment affordability.
+    - Evaluate cash flow insolvency if monthly EMI exceeds or heavily burdens net income.
+    - Note risks of operational costs (maintenance, fuel, interest rates) and lack of emergency buffers.
+
+15. Keep the analysis concise, structured, and evidence-grounded.
 
 ==================================================
 OUTPUT FORMAT
 ==================================================
+
 
 DOCUMENTED FACTS:
 

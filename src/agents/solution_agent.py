@@ -269,20 +269,15 @@ definitive recommendation cannot be made.
 
 --------------------------------------------------
 
-10. NUMERICAL CLAIMS
+10. FINANCIAL & LOAN SOLUTIONS:
+If the user is evaluating an unaffordable or high-risk loan/purchase:
+- Propose evidence-based mitigation options such as extending loan repayment tenure (to reduce monthly EMI), increasing upfront down payment, applying for government agricultural/business subsidies, machinery rental/leasing, or adding a qualified co-borrower.
 
-Do not invent:
+--------------------------------------------------
 
-- scores
-- percentages
-- probabilities
-- rankings
-- measurements
-- financial values
-- performance values
+11. NUMERICAL CLAIMS
 
-unless they are explicitly present in
-the document evidence.
+Do not invent unsupported financial figures. Use stated figures from context and clear arithmetic.
 
 ==================================================
 DOCUMENT EVIDENCE
