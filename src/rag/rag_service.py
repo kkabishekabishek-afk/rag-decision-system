@@ -19,16 +19,10 @@ OLLAMA_MODEL = (
     "llama3.2:latest"
 )
 
-CHROMA_PATH = (
-    "data/chroma"
-)
+from src.rag.chroma_helper import get_chroma_client_and_collection
 
-COLLECTION_NAME = (
-    "documents"
-)
-
+COLLECTION_NAME = "documents"
 TOP_K = 3
-
 
 # ==========================================
 # EMBEDDING MODEL
@@ -46,18 +40,11 @@ print(
     "Embedding model loaded."
 )
 
-
 # ==========================================
 # CHROMADB
 # ==========================================
 
-client = chromadb.PersistentClient(
-    path=CHROMA_PATH
-)
-
-collection = client.get_collection(
-    name=COLLECTION_NAME
-)
+client, collection, CHROMA_PATH = get_chroma_client_and_collection()
 
 
 # ==========================================

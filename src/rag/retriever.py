@@ -9,12 +9,11 @@ EMBEDDING_MODEL = (
     "all-MiniLM-L6-v2"
 )
 
-CHROMA_PATH = "data/chroma"
+from src.rag.chroma_helper import get_chroma_client_and_collection
 
+client, collection, CHROMA_PATH = get_chroma_client_and_collection()
 COLLECTION_NAME = "documents"
-
 TOP_K = 3
-
 
 print(
     "Loading embedding model..."
@@ -26,15 +25,6 @@ embedding_model = SentenceTransformer(
 
 print(
     "Embedding model loaded."
-)
-
-
-client = chromadb.PersistentClient(
-    path=CHROMA_PATH
-)
-
-collection = client.get_collection(
-    name=COLLECTION_NAME
 )
 
 
