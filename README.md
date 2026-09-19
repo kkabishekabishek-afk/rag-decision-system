@@ -3,15 +3,16 @@ title: Self Adaptive Multi Agent RAG Decision System
 emoji: ⚡
 colorFrom: indigo
 colorTo: blue
-sdk: docker
-app_port: 7860
+sdk: streamlit
+sdk_version: "1.30.0"
+app_file: app.py
 pinned: false
 license: mit
 ---
 
 # ⚡ Self-Adaptive Multi-Agent RAG Decision System
 
-Enterprise-grade document intelligence and autonomous strategic decision support system powered by Multi-Agent deliberation, ChromaDB vector retrieval, and Ollama LLMs.
+Enterprise-grade document intelligence and autonomous strategic decision support system powered by Multi-Agent deliberation, ChromaDB vector retrieval, and Streamlit.
 
 ## 🧬 Multi-Agent Topology
 * **🔀 Router Agent**: Classifies query complexity into `SIMPLE`, `ANALYTICAL`, or `DECISION`.
@@ -25,13 +26,13 @@ Enterprise-grade document intelligence and autonomous strategic decision support
 
 ---
 
-## 🚀 Hugging Face Spaces Deployment Instructions
+## 🚀 Hugging Face Spaces (100% Free Streamlit SDK)
 
 1. Create a new Space on [Hugging Face Spaces](https://huggingface.co/new-space)
-2. Select **Docker** (or **Streamlit**)
-3. Clone or push this repository to your Space:
+2. Select SDK: **Streamlit** (Free CPU Basic • 16GB RAM)
+3. Push this repository to your Space:
    ```bash
    git remote add space https://huggingface.co/spaces/<YOUR_USERNAME>/<YOUR_SPACE_NAME>
-   git push space main
+   git push space master:main
    ```
-4. Hugging Face Spaces will automatically build the container and deploy your app 24/7.
+4. Hugging Face will deploy it 24/7 for free!
