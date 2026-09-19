@@ -8,9 +8,26 @@ sys.path.insert(
     str(PROJECT_ROOT)
 )
 
-from langchain_text_splitters import (
-    RecursiveCharacterTextSplitter
-)
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    try:
+        from langchain.text_splitter import RecursiveCharacterTextSplitter
+    except ImportError:
+        class RecursiveCharacterTextSplitter:
+            def __init__(self, chunk_size=500, chunk_overlap=100):
+                self.chunk_size = chunk_size
+                self.chunk_overlap = chunk_overlap
+            def split_text(self, text):
+                chunks = []
+                start = 0
+                while start < len(text):
+                    end = min(start + self.chunk_size, len(text))
+                    chunks.append(text[start:end])
+                    if end == len(text):
+                        break
+                    start += self.chunk_size - self.chunk_overlap
+                return chunks
 
 from src.rag.loader import load_pdf
 
