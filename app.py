@@ -317,6 +317,29 @@ with st.sidebar:
         st.info("No documents found in knowledge base.")
 
     st.markdown("---")
+    with st.expander("☁️ Cloud LLM Config (For Streamlit Cloud)"):
+        st.markdown("<span style='font-size:0.75rem; color:#94A3B8;'>If Ollama is not installed on this cloud server, enter a <b>Free Groq API Key</b> (runs Llama 3.3 for free) or Gemini Key:</span>", unsafe_allow_html=True)
+        groq_input = st.text_input(
+            "Groq API Key (Free)",
+            value=st.session_state.get("GROQ_API_KEY", ""),
+            type="password",
+            placeholder="gsk_...",
+            help="Get a free instant key with zero credit card at https://console.groq.com/keys"
+        )
+        if groq_input:
+            st.session_state["GROQ_API_KEY"] = groq_input
+        
+        gemini_input = st.text_input(
+            "Gemini API Key (Optional)",
+            value=st.session_state.get("GEMINI_API_KEY", ""),
+            type="password",
+            placeholder="AIzaSy...",
+            help="Get a free Google Gemini key at https://aistudio.google.com/app/apikey"
+        )
+        if gemini_input:
+            st.session_state["GEMINI_API_KEY"] = gemini_input
+
+    st.markdown("---")
     st.markdown("### 📤 Upload New Document")
     uploaded_file = st.file_uploader(
         "Upload PDF for Vector Indexing",

@@ -1,5 +1,5 @@
 import chromadb
-import ollama
+from src.rag.llm_client import call_llm
 from sentence_transformers import SentenceTransformer
 
 
@@ -131,17 +131,7 @@ USER QUESTION:
 FINAL ANSWER:
 """
 
-    response = ollama.chat(
-        model=OLLAMA_MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    )
-
-    return response["message"]["content"]
+    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
 
 
 # ==========================================

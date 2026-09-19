@@ -1,6 +1,5 @@
 import re
-import ollama
-
+from src.rag.llm_client import call_llm
 
 OLLAMA_MODEL = "llama3.2:latest"
 
@@ -152,17 +151,8 @@ USER QUESTION:
 {question}
 """
 
-    response = ollama.chat(
-        model=OLLAMA_MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    )
-
-    result = response["message"]["content"].strip().upper()
+    response_text = call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
+    result = response_text.strip().upper()
 
     # Exact matching only
     if result == "DECISION":
