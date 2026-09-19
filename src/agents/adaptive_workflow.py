@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import concurrent.futures
 
 
 # ==========================================
@@ -169,32 +170,14 @@ def run_workflow(
     if query_type == "DECISION":
 
         # ----------------------------------
-        # ANALYSIS
+        # RUN ANALYSIS & RISK IN PARALLEL
         # ----------------------------------
-
-        print(
-            "\n[ANALYSIS AGENT]"
-        )
-
-        analysis = analysis_agent(
-            question,
-            documents
-        )
-
-
-        # ----------------------------------
-        # RISK
-        # ----------------------------------
-
-        print(
-            "\n[RISK AGENT]"
-        )
-
-        risk = risk_agent(
-            question,
-            documents,
-            analysis
-        )
+        print("\n[ANALYSIS & RISK AGENTS - PARALLEL]")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            future_analysis = executor.submit(analysis_agent, question, documents)
+            future_risk = executor.submit(risk_agent, question, documents, "")
+            analysis = future_analysis.result()
+            risk = future_risk.result()
 
 
         # ----------------------------------
