@@ -254,6 +254,7 @@ with st.container(border=True):
 
 # EXECUTE WORKFLOW
 if ask_clicked and user_input.strip() and st.session_state.active_document:
+    st.session_state.last_result = None
     with st.spinner(f"Analyzing {active_doc_name} across all decision factors..."):
         try:
             t0 = time.time()
@@ -261,6 +262,7 @@ if ask_clicked and user_input.strip() and st.session_state.active_document:
             res["duration"] = round(time.time() - t0, 2)
             res["question"] = user_input
             st.session_state.last_result = res
+            st.rerun()
         except Exception as e:
             st.error(f"Error finding answer: {e}")
 
