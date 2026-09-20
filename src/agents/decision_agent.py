@@ -416,13 +416,20 @@ State uncertainties explicitly.
 
 ==================================================
 ==================================================
-OUTPUT FORMAT & SPECIAL INSTRUCTIONS
+OUTPUT FORMAT & MANDATORY VERDICT RULES
 ==================================================
 
-1. TOP-LINE VERDICT HEADER:
-Your response MUST start on the first line with a definitive, prominent verdict:
-`### 🎯 VERDICT: [NOT SUITABLE / SUITABLE / CONDITIONALLY SUITABLE / INSUFFICIENT EVIDENCE]`
-Followed immediately by a 1-2 sentence direct answer to the user's question.
+1. TOP-LINE DIRECT VERDICT (MANDATORY FORMAT):
+Your response MUST start on the first line with an explicit, direct answer:
+- If SUITABLE:
+  `### 🎯 VERDICT: YES, SUITABLE`
+  `**Direct Answer:** YES, he is suitable for this role because he has [list exact skills, degrees, scores, and tools verified in the document].`
+- If NOT SUITABLE:
+  `### 🎯 VERDICT: NO, NOT SUITABLE`
+  `**Direct Answer:** NO, this is not suitable because [state exact reason: e.g., monthly loan payment of Rs. 13,692 exceeds monthly income of Rs. 2,667 / missing critical qualifications].`
+- If INSUFFICIENT DATA:
+  `### 🎯 VERDICT: CONDITIONALLY SUITABLE / INSUFFICIENT DATA`
+  `**Direct Answer:** Cannot confirm definitively because [exact missing variable].`
 
 2. MATHEMATICAL & FINANCIAL LOAN REASONING:
 If the user asks about loan affordability, EMI, tractor/vehicle/machinery purchase, or income suitability:
@@ -430,21 +437,25 @@ If the user asks about loan affordability, EMI, tractor/vehicle/machinery purcha
 - If Annual: Calculate `Monthly Income = Annual Income / 12`.
 - Compare Monthly Income directly with the requested Monthly EMI.
 - Calculate Monthly Deficit/Surplus (`Monthly Income - Monthly EMI`) and Debt-to-Income (DTI) ratio.
-- Standard safe banking threshold is DTI <= 40%. If EMI > Monthly Income (DTI > 100%), it creates an immediate monthly cash deficit and MUST be marked **NOT SUITABLE**.
+- Standard safe banking threshold is DTI <= 40%. If EMI > Monthly Income (DTI > 100%), state: "NO, it is NOT SUITABLE because the monthly payment exceeds monthly income."
 - Use clean plain text arithmetic like `Rs. 32,000 / 12 = Rs. 2,667 per month` (DO NOT use LaTeX equations or backslashes).
 
 3. SUPPORTING EVIDENCE:
-- Bullet points showing the exact figures and statements from the active document.
+- Bullet points showing the exact verified qualifications, figures, and statements from the active document.
 
-4. RISK & AFFORDABILITY BREAKDOWN:
-- Highlight debt burden, cash flow shortfall, or operational constraints.
+4. RISK & GAP ASSESSMENT:
+- Highlight genuine limitations or risks without making false assumptions.
 
 5. ACTIONABLE NEXT STEPS:
-- Realistic options (e.g. extending tenure to lower EMI, government subsidies, rental options, co-borrowers).
+- Concrete next steps (e.g. technical interview coding round, role placement, or loan tenure adjustment).
 
-6. CONCLUSION:
-- A concise concluding summary.
+6. FINAL CONCLUSION (EXPLICIT REASONING):
+Provide a clear, decisive closing statement:
+`### 🏁 Conclusion:`
+`**YES, SUITABLE because:** [Summary of verified skills/metrics]` OR
+`**NO, NOT SUITABLE because:** [Summary of shortfall/missing requirements]`
 """
+
 
     # ======================================
     # CALL OLLAMA

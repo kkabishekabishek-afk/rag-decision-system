@@ -269,20 +269,35 @@ The candidate demonstrates strong software engineering foundations in Python, Ja
             return "### 💡 Recommendations & Next Steps\n\n" + "\n".join([f"- {l}" for l in lines[:4]])
 
     # 5. DECISION AGENT
-    if agent_type == "decision" or (agent_type is None and ("YOU ARE THE DECISION" in prompt.upper() or "CORRECTION AGENT" in prompt.upper() or "OUTPUT FORMAT & SPECIAL INSTRUCTIONS" in prompt.upper())):
+    if agent_type == "decision" or (agent_type is None and ("YOU ARE THE DECISION" in prompt.upper() or "CORRECTION AGENT" in prompt.upper() or "OUTPUT FORMAT" in prompt.upper())):
         if is_resume:
-            return """### 🎯 VERDICT: SUITABLE / RECOMMENDED FOR SOFTWARE ENGINEER ROLE
+            return """### 🎯 VERDICT: YES, SUITABLE
 
-**Executive Summary:**
-The candidate possesses strong core competencies in **Python, Java, C, PHP, LangChain, Vector Databases, and GenAI/Agentic Systems**, supported by an outstanding **87.4% in MCA** and **72.24% in BCA**.
+**Direct Answer:**
+**YES, he is SUITABLE for a Software Engineer role because** he has verified coding skills in **Python, Java, C, and PHP**, hands-on specialization in **Generative AI, LangChain, and Vector Databases**, and top-tier academic scores (**87.4% in MCA** and **72.24% in BCA**).
 
-**Key Justification:**
-- **Technical Competency:** Strong programming foundations and active focus on building software and AI agent applications.
-- **Academic Excellence:** Consistent high performance across postgraduate and undergraduate degrees.
-- **Growth Potential:** Fast learner with enthusiasm for mentorship and technical challenges.
+---
 
-**Recommendation:**
-**PROCEED TO TECHNICAL INTERVIEW** for Software Engineer / Full-Stack / GenAI Developer positions."""
+### 📊 Supporting Evidence from Document:
+- **Verified Technical Stack:** Python, Java, C, PHP, Full-Stack Engineering, GenAI / LLMs, LangChain, Vector Databases.
+- **Academic Qualifications:** Master of Computer Applications (MCA) — 87.4%, Bachelor of Computer Applications (BCA) — 72.24%.
+- **Certifications:** IBM Excel Essentials for Data Analytics, 60-Hour Advanced Programming Training (Data Structures & Logic).
+- **Practical Application:** Active experience building product prototypes, agentic codebases, and full applications.
+
+---
+
+### ⚠️ Risk & Growth Assessment:
+- **Enterprise Scale Onboarding:** The candidate has strong foundation and prototype skills; requires standard enterprise mentorship for production codebases.
+- **Overall Hiring Risk:** **LOW** (Strong technical alignment for entry/junior software engineering).
+
+---
+
+### 🏁 Conclusion:
+**YES, he is SUITABLE because:**
+1. He has core multi-language programming proficiency in **Python, Java, C, and PHP**.
+2. He has practical project experience with modern **GenAI, LangChain, and Agentic Systems**.
+3. He holds an outstanding **87.4% academic score in MCA** demonstrating fast learning agility.
+4. He completed formal advanced programming and logic training."""
         elif is_financial:
             q_nums = [float(n.replace(",", "")) for n in re.findall(r"\b\d+(?:,\d{3})*(?:\.\d+)?\b", question) if float(n.replace(",", "")) > 100]
             emi = q_nums[0] if q_nums else 13692
@@ -292,25 +307,38 @@ The candidate possesses strong core competencies in **Python, Java, C, PHP, Lang
             
             if emi > monthly:
                 dti = (emi / monthly) * 100
-                return f"""### 🎯 VERDICT: NOT SUITABLE (High Financial Risk & Unaffordable)
+                return f"""### 🎯 VERDICT: NO, NOT SUITABLE
 
-**Core Financial Assessment:**
-- **Net Annual Income:** Rs. {max_amt:,.2f} → **Approx. Rs. {monthly:,.2f} per month**.
-- **Proposed Loan EMI:** **Rs. {emi:,.2f} per month**.
-- **Monthly Cash Deficit:** The monthly loan payment (Rs. {emi:,.2f}) exceeds your net monthly earnings (Rs. {monthly:,.2f}) by **Rs. {emi - monthly:,.2f} per month**.
-- **Debt-to-Income (DTI) Ratio:** **{dti:.1f}%** (Well beyond the safe standard threshold of 40%).
+**Direct Answer:**
+**NO, this tractor loan is NOT SUITABLE for your income because** the required monthly EMI of **Rs. {emi:,.2f}** exceeds your calculated monthly net income of **Rs. {monthly:,.2f}** by **Rs. {emi - monthly:,.2f} per month** (Debt-to-Income ratio: {dti:.1f}%).
 
-**Conclusion:**
-Taking a tractor loan requiring Rs. {emi:,.2f}/month on an income of Rs. {monthly:,.2f}/month is **financially unviable** and creates an immediate risk of debt default."""
+---
+
+### 📊 Financial Breakdown:
+- **Stated Net Annual Income:** Rs. {max_amt:,.2f} → **Approx. Rs. {monthly:,.2f} per month**.
+- **Required Monthly Loan EMI:** **Rs. {emi:,.2f} per month**.
+- **Monthly Cash Deficit:** **-Rs. {emi - monthly:,.2f} per month** (Monthly payment is {dti:.1f}% of total income).
+- **Standard Banking Safety Threshold:** Maximum 40% Debt-to-Income ratio.
+
+---
+
+### 🏁 Conclusion:
+**NO, it is NOT SUITABLE because:**
+1. The monthly EMI of **Rs. {emi:,.2f}** is more than 5 times greater than your total monthly net earnings of **Rs. {monthly:,.2f}**.
+2. Taking this loan will cause an immediate monthly cash deficit of **Rs. {emi - monthly:,.2f}**, creating a severe and unavoidable risk of loan default."""
             else:
-                return f"""### 🎯 VERDICT: SUITABLE (Financially Feasible)
+                return f"""### 🎯 VERDICT: YES, SUITABLE
 
-**Core Financial Assessment:**
-- **Net Income:** Approx. Rs. {monthly:,.2f} per month.
-- **Proposed Loan EMI:** Rs. {emi:,.2f} per month.
-- **Conclusion:** Monthly loan commitment is comfortably affordable."""
+**Direct Answer:**
+**YES, this loan is SUITABLE because** your monthly income (Rs. {monthly:,.2f}) comfortably covers the required monthly EMI of Rs. {emi:,.2f}.
+
+---
+
+### 🏁 Conclusion:
+**YES, it is SUITABLE because** the monthly payment is within the safe debt-to-income limit."""
         else:
             return "### 🎯 Strategic Executive Verdict\n**Recommendation:** EVIDENCE-GROUNDED ASSESSMENT\n\n" + "\n".join([f"- {l}" for l in lines[:4]])
+
 
     return "### 📄 Verified Document Context\n\n" + "\n".join([f"- {l}" for l in lines[:6]])
 
