@@ -401,7 +401,8 @@ over an unsupported recommendation.
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
+    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="solution")
+
 
 
 # ==========================================

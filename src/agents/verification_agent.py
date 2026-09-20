@@ -584,7 +584,8 @@ Do not force a positive or negative decision.
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
+    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="verification")
+
 
 
 # ==========================================
@@ -809,4 +810,4 @@ Do not include:
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
+    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="decision")

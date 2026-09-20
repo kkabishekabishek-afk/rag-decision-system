@@ -450,7 +450,8 @@ If the user asks about loan affordability, EMI, tractor/vehicle/machinery purcha
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
+    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="decision")
+
 
 
 

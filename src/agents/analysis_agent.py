@@ -76,4 +76,5 @@ Provide a concise, clearly formatted, and structured analysis.
 ANALYSIS:
 """
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
+    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="analysis")
+

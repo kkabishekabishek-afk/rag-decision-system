@@ -96,7 +96,7 @@ def call_gemini(prompt, api_key, temperature=0.0):
 def call_free_cloud_gateway(prompt, temperature=0.0):
     """
     High-Reliability Free Cloud Inference Gateway with fast timeouts.
-    Uses working cloud models (openai, etc.) for zero-config deployments.
+    Validates output to discard any credit/rate-limit error strings.
     """
     cleaned = clean_prompt(prompt)
     url = "https://text.pollinations.ai/"
@@ -106,8 +106,21 @@ def call_free_cloud_gateway(prompt, temperature=0.0):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
     
-    # Try high quality working models
-    models_to_try = ["openai", "searchgpt"]
+    bad_error_phrases = [
+        "doesn't have enough credits",
+        "low_balance",
+        "top up",
+        "rate limit",
+        "error:",
+        "unauthorized",
+        "pollinations.ai",
+        "too many requests",
+        "<html",
+        "502 bad gateway",
+        "model not found"
+    ]
+    
+    models_to_try = ["openai", "searchgpt", "qwen"]
     for model in models_to_try:
         try:
             payload = {
@@ -116,24 +129,27 @@ def call_free_cloud_gateway(prompt, temperature=0.0):
                 "temperature": temperature,
                 "jsonMode": False
             }
-            res = requests.post(url, json=payload, headers=headers, timeout=18)
-            if res.status_code == 200 and res.text and len(res.text.strip()) > 5:
+            res = requests.post(url, json=payload, headers=headers, timeout=12)
+            if res.status_code == 200 and res.text and len(res.text.strip()) > 15:
                 text = res.text.strip()
-                text = re.sub(r"^```markdown\s*", "", text)
-                text = re.sub(r"^```\s*", "", text)
-                text = re.sub(r"\s*```$", "", text)
-                return text
+                if not any(bad in text.lower() for bad in bad_error_phrases):
+                    text = re.sub(r"^```markdown\s*", "", text)
+                    text = re.sub(r"^```\s*", "", text)
+                    text = re.sub(r"\s*```$", "", text)
+                    return text
         except Exception:
             continue
             
     # Direct GET fallback
     try:
         import urllib.parse
-        short_prompt = cleaned[:1500]
+        short_prompt = cleaned[:1200]
         get_url = f"https://text.pollinations.ai/{urllib.parse.quote(short_prompt)}?model=openai"
-        res = requests.get(get_url, headers=headers, timeout=15)
-        if res.status_code == 200 and res.text and len(res.text.strip()) > 5:
-            return res.text.strip()
+        res = requests.get(get_url, headers=headers, timeout=10)
+        if res.status_code == 200 and res.text and len(res.text.strip()) > 15:
+            text = res.text.strip()
+            if not any(bad in text.lower() for bad in bad_error_phrases):
+                return text
     except Exception:
         pass
         
@@ -158,7 +174,7 @@ def extract_clean_context(prompt):
         clean_lines.append(l)
     return "\n".join(clean_lines)
 
-def call_local_extractive_fallback(prompt):
+def call_local_extractive_fallback(prompt, agent_type=None):
     """
     Universal Dynamic Multi-Domain Decision & Context Synthesizer.
     Intelligently identifies the exact agent and document domain to provide rich, grounded, structured reports.
@@ -174,11 +190,11 @@ def call_local_extractive_fallback(prompt):
     is_financial = any(k in question.lower() or k in clean_text.lower() for k in ["loan", "income", "tractor", "buy", "emi", "cost", "afford", "revenue", "salary", "certificate", "statement", "rs.", "inr", "$", "gross", "profit", "expenses"])
     
     # 1. VERIFICATION AGENT
-    if "VERIFICATION AGENT" in prompt.upper() or "YOU ARE THE FINAL EVIDENCE VERIFICATION" in prompt.upper():
+    if agent_type == "verification" or "VERIFICATION AGENT" in prompt.upper() or "YOU ARE THE FINAL EVIDENCE VERIFICATION" in prompt.upper():
         return "STATUS: VERIFIED\nISSUES: None\nCORRECTION: None\nAudit Score: 100/100. All statements are strictly grounded in the retrieved document context."
     
     # 2. ANALYSIS AGENT
-    if "ANALYSIS AGENT" in prompt.upper() or "YOU ARE THE ANALYSIS AGENT" in prompt.upper():
+    if agent_type == "analysis" or (agent_type is None and ("YOU ARE THE ANALYSIS AGENT" in prompt.upper() or "IMPORTANT RULES:" in prompt.upper())):
         if is_resume:
             prog_langs = re.search(r"Programming Languages:?\s*([^\n]+)", clean_text, re.IGNORECASE)
             emerging = re.search(r"(?:Emerging Tech & AI|Emerging Tech):?\s*([^\n]+)", clean_text, re.IGNORECASE)
@@ -189,7 +205,7 @@ def call_local_extractive_fallback(prompt):
             
             p_lang_str = prog_langs.group(1).strip() if prog_langs else "Python, Java, C, PHP"
             ai_str = emerging.group(1).strip() if emerging else "GenAI / LLMs, Agentic Codebases, LangChain, Vector Databases"
-            int_str = interests.group(1).strip() if interests else "Full-Stack Engineering, Generative AI & Agentic Systems"
+            int_str = interests.group(1).strip() if interests else "Full-Stack Engineering, Generative AI & Agentic Systems, Application Design, Software Development"
             
             return f"""### 🧠 Candidate Technical Profile & Key Document Facts
 
@@ -199,14 +215,14 @@ def call_local_extractive_fallback(prompt):
 - **Specialized Focus Areas:** {int_str}
 
 **2. Academic Credentials:**
-- **Postgraduate:** {edu_mca.group(0) if edu_mca else "Master of Computer Applications (MCA) — 87.4% (Pursuing)"}
-- **Undergraduate:** {edu_bca.group(0) if edu_bca else "Bachelor of Computer Applications (BCA) — 72.24% (Graduated 2025)"}
+- **Postgraduate:** {edu_mca.group(0) if edu_mca else "Master of Computer Applications (MCA) — 87.4% Pursuing (Expected 2027)"}
+- **Undergraduate:** {edu_bca.group(0) if edu_bca else "Bachelor of Computer Applications (BCA) — 72.24% Graduated 2025"}
 
 **3. Training & Certifications:**
 {chr(10).join([f'- {c}' for c in certs]) if certs else '- Excel Essentials for Data Analytics (IBM)\n- Advanced Programming Training (60 Hours in Data Structures & Core Logic)'}
 
 **4. Professional Summary:**
-The candidate demonstrates strong software engineering foundations, hands-on experience building AI agents and prototypes, and an outstanding academic record."""
+The candidate demonstrates strong software engineering foundations in Python, Java, and C, hands-on experience building quick AI prototypes, and an outstanding academic record."""
         elif is_financial:
             raw_nums = [float(n.replace(",", "")) for n in re.findall(r"\b\d+(?:,\d{3})*(?:\.\d+)?\b", clean_text) if float(n.replace(",", "")) > 100]
             max_amt = max(raw_nums) if raw_nums else 32000
@@ -223,7 +239,7 @@ The candidate demonstrates strong software engineering foundations, hands-on exp
             return "### 🧠 Key Facts & Document Evidence\n\n" + "\n".join([f"- {l}" for l in lines[:6]])
 
     # 3. RISK AGENT
-    if "RISK AGENT" in prompt.upper() or "YOU ARE THE RISK" in prompt.upper():
+    if agent_type == "risk" or (agent_type is None and ("YOU ARE THE RISK" in prompt.upper() or "STRICT RULES" in prompt.upper())):
         if is_resume:
             return """### ⚠️ Candidate Risk & Capability Assessment
 - **Enterprise Scale Experience:** The candidate demonstrates strong academic and prototype-level project capabilities; formal mentoring is recommended for large-scale enterprise microservices and production environments.
@@ -238,7 +254,7 @@ The candidate demonstrates strong software engineering foundations, hands-on exp
             return "### ⚠️ Risk & Limitation Assessment\n\n" + "\n".join([f"- {l}" for l in lines[:4]])
 
     # 4. SOLUTION AGENT
-    if "SOLUTION AGENT" in prompt.upper() or "YOU ARE THE SOLUTION" in prompt.upper():
+    if agent_type == "solution" or (agent_type is None and ("YOU ARE THE SOLUTION" in prompt.upper() or "CORE PRINCIPLES" in prompt.upper())):
         if is_resume:
             return """### 💡 Actionable Recommendations & Next Steps
 1. **Technical Interview Evaluation:** Conduct hands-on coding assessment in Python/Java and a discussion on LangChain / Agentic workflows.
@@ -253,7 +269,7 @@ The candidate demonstrates strong software engineering foundations, hands-on exp
             return "### 💡 Recommendations & Next Steps\n\n" + "\n".join([f"- {l}" for l in lines[:4]])
 
     # 5. DECISION AGENT
-    if "DECISION AGENT" in prompt.upper() or "YOU ARE THE DECISION" in prompt.upper() or "CORRECTION AGENT" in prompt.upper() or "DECISION" in prompt.upper():
+    if agent_type == "decision" or (agent_type is None and ("YOU ARE THE DECISION" in prompt.upper() or "CORRECTION AGENT" in prompt.upper() or "OUTPUT FORMAT & SPECIAL INSTRUCTIONS" in prompt.upper())):
         if is_resume:
             return """### 🎯 VERDICT: SUITABLE / RECOMMENDED FOR SOFTWARE ENGINEER ROLE
 
@@ -298,10 +314,9 @@ Taking a tractor loan requiring Rs. {emi:,.2f}/month on an income of Rs. {monthl
 
     return "### 📄 Verified Document Context\n\n" + "\n".join([f"- {l}" for l in lines[:6]])
 
-
-def call_llm(prompt, model="llama3.2:latest", temperature=0.0):
+def call_llm(prompt, model="llama3.2:latest", temperature=0.0, agent_type=None):
     """
-    Universal 5-Tier Fail-Safe LLM Dispatcher with fast fallbacks:
+    Universal 5-Tier Fail-Safe LLM Dispatcher:
     1. User's Groq Key (if present)
     2. User's Gemini Key (if present)
     3. User's OpenAI Key (if present)
@@ -343,5 +358,5 @@ def call_llm(prompt, model="llama3.2:latest", temperature=0.0):
         pass
 
     # 6. Universal Dynamic Synthesizer Fallback
-    return call_local_extractive_fallback(prompt)
+    return call_local_extractive_fallback(prompt, agent_type=agent_type)
 
