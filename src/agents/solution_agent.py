@@ -405,8 +405,10 @@ over an unsupported recommendation.
     return call_llm(
         prompt,
         model=OLLAMA_MODEL,
-        temperature=0.0
+        temperature=0.0,
+        agent_type="SOLUTION"
     )
+
 
 
 

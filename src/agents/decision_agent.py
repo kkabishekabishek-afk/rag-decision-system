@@ -513,8 +513,10 @@ establish that X is lacking.
     return call_llm(
         prompt,
         model=OLLAMA_MODEL,
-        temperature=0.0
+        temperature=0.0,
+        agent_type="DECISION"
     )
+
 
 
 

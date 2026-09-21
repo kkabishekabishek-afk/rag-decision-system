@@ -19,32 +19,25 @@ OLLAMA_MODEL = (
     "llama3.2:latest"
 )
 
-CHROMA_PATH = (
-    "data/chroma"
-)
+from pathlib import Path
 
-COLLECTION_NAME = (
-    "documents"
-)
-
-TOP_K = 3
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+CHROMA_PATH = str(PROJECT_ROOT / "data" / "chroma")
+COLLECTION_NAME = "documents"
+TOP_K = 8
 
 
 # ==========================================
 # EMBEDDING MODEL
 # ==========================================
 
-print(
-    "Loading embedding model..."
-)
+print("Loading embedding model...")
 
 embedding_model = SentenceTransformer(
     EMBEDDING_MODEL
 )
 
-print(
-    "Embedding model loaded."
-)
+print("Embedding model loaded.")
 
 
 # ==========================================
@@ -55,7 +48,7 @@ client = chromadb.PersistentClient(
     path=CHROMA_PATH
 )
 
-collection = client.get_collection(
+collection = client.get_or_create_collection(
     name=COLLECTION_NAME
 )
 
@@ -85,38 +78,26 @@ def retrieve(
     # ======================================
 
     if source:
+        print(f"\nFiltering retrieval strictly to: {source}")
+        try:
+            doc_items = collection.get(where={"source": source})
+            total_doc_chunks = len(doc_items["ids"]) if doc_items and doc_items.get("ids") else 0
+        except Exception:
+            total_doc_chunks = 8
 
-        print(
-            f"\nFiltering retrieval to: {source}"
-        )
-
+        n_res = min(max(total_doc_chunks, 1), 8)
         results = collection.query(
-
-            query_embeddings=[
-                question_embedding
-            ],
-
-            n_results=TOP_K,
-
-            where={
-                "source": source
-            }
+            query_embeddings=[question_embedding],
+            n_results=n_res,
+            where={"source": source}
         )
-
     else:
-
-        print(
-            "\nSearching all documents."
-        )
-
+        print("\nSearching all documents.")
         results = collection.query(
-
-            query_embeddings=[
-                question_embedding
-            ],
-
+            query_embeddings=[question_embedding],
             n_results=TOP_K
         )
+
 
 
     # ======================================

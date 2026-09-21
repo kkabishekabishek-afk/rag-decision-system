@@ -583,8 +583,10 @@ Do not force a positive or negative decision.
     return call_llm(
         prompt,
         model=OLLAMA_MODEL,
-        temperature=0.0
+        temperature=0.0,
+        agent_type="VERIFICATION"
     )
+
 
 
 
@@ -809,5 +811,7 @@ Do not include:
     return call_llm(
         prompt,
         model=OLLAMA_MODEL,
-        temperature=0.0
-    )
+        temperature=0.0,
+        agent_type="CORRECTION"
+    )
+
