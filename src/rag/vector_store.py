@@ -78,26 +78,19 @@ def index_pdf(pdf_path):
     # REMOVE OLD VERSION OF SAME DOCUMENT
     # ----------------------------------------------
 
-    existing = collection.get(
-        where={
-            "source": pdf_path.name
-        }
-    )
-
-    existing_ids = existing.get(
-        "ids",
-        []
-    )
-
-    if existing_ids:
-
-        collection.delete(
-            ids=existing_ids
+    try:
+        existing = collection.get(
+            where={
+                "source": pdf_path.name
+            }
         )
+        existing_ids = existing.get("ids", [])
+        if existing_ids:
+            collection.delete(ids=existing_ids)
+            print(f"Removed {len(existing_ids)} old chunks.")
+    except Exception as del_err:
+        print(f"Note: previous chunks cleanup skipped: {del_err}")
 
-        print(
-            f"Removed {len(existing_ids)} old chunks."
-        )
 
 
     # ----------------------------------------------

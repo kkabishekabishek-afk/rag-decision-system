@@ -8,55 +8,34 @@ import chromadb
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 COLLECTION_NAME = "documents"
 
-def is_dir_writable(path):
-    """Check if directory is writable."""
-    try:
-        p = Path(path)
-        p.mkdir(parents=True, exist_ok=True)
-        test_file = p / f".test_write_{os.getpid()}"
-        test_file.write_text("ok")
-        if test_file.exists():
-            test_file.unlink()
-        return True
-    except Exception:
-        return False
-
 def get_writable_chroma_path():
-    """Returns guaranteed-writable Chroma directory (handles Streamlit Cloud read-only mounts)."""
-    repo_chroma = PROJECT_ROOT / "data" / "chroma"
-    if is_dir_writable(repo_chroma):
-        return str(repo_chroma)
-    
-    tmp_chroma = Path(tempfile.gettempdir()) / "rag_decision_chroma"
+    """Returns guaranteed-writable Chroma directory in process temp storage."""
+    tmp_chroma = Path(tempfile.gettempdir()) / "rag_chroma_store_v2"
     tmp_chroma.mkdir(parents=True, exist_ok=True)
-    
-    # Copy baseline chroma files if needed
-    if repo_chroma.exists() and not (tmp_chroma / "chroma.sqlite3").exists():
-        try:
-            for item in repo_chroma.glob("*"):
-                if item.is_dir():
-                    shutil.copytree(item, tmp_chroma / item.name, dirs_exist_ok=True)
-                else:
-                    shutil.copy2(item, tmp_chroma / item.name)
-        except Exception:
-            pass
-            
     return str(tmp_chroma)
 
 def get_writable_documents_dir():
     """Returns guaranteed-writable documents directory for PDF uploads."""
-    repo_docs = PROJECT_ROOT / "data" / "documents"
-    if is_dir_writable(repo_docs):
-        return repo_docs
-    tmp_docs = Path(tempfile.gettempdir()) / "rag_decision_documents"
+    tmp_docs = Path(tempfile.gettempdir()) / "rag_decision_documents_v2"
     tmp_docs.mkdir(parents=True, exist_ok=True)
+    
+    # Sync initial sample documents from repo if available
+    repo_docs = PROJECT_ROOT / "data" / "documents"
+    if repo_docs.exists():
+        for pdf in repo_docs.glob("*.pdf"):
+            dst = tmp_docs / pdf.name
+            if not dst.exists():
+                try:
+                    shutil.copy2(pdf, dst)
+                except Exception:
+                    pass
     return tmp_docs
 
 _client = None
 _collection = None
 
 def get_chroma_client_and_collection():
-    """Singleton getter for Chroma client and collection."""
+    """Singleton getter for Chroma client and collection in writable storage."""
     global _client, _collection
     if _client is None or _collection is None:
         c_path = get_writable_chroma_path()
