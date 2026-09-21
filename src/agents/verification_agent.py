@@ -16,7 +16,11 @@ sys.path.insert(
 )
 
 
-from src.rag.llm_client import call_llm
+# ==========================================
+# OLLAMA
+# ==========================================
+
+import ollama
 
 OLLAMA_MODEL = "llama3.2:latest"
 
@@ -584,8 +588,25 @@ Do not force a positive or negative decision.
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="verification")
+    response = ollama.chat(
+        model=OLLAMA_MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        options={
+            "temperature": 0
+        }
+    )
 
+
+    return response[
+        "message"
+    ][
+        "content"
+    ]
 
 
 # ==========================================
@@ -810,4 +831,22 @@ Do not include:
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="decision")
+    response = ollama.chat(
+        model=OLLAMA_MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        options={
+            "temperature": 0
+        }
+    )
+
+
+    return response[
+        "message"
+    ][
+        "content"
+    ]

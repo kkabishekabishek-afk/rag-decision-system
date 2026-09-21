@@ -4,7 +4,7 @@ from sentence_transformers import (
     SentenceTransformer
 )
 
-from src.rag.llm_client import call_llm
+import ollama
 
 
 # ==========================================
@@ -19,10 +19,16 @@ OLLAMA_MODEL = (
     "llama3.2:latest"
 )
 
-from src.rag.chroma_helper import get_chroma_client_and_collection
+CHROMA_PATH = (
+    "data/chroma"
+)
 
-COLLECTION_NAME = "documents"
+COLLECTION_NAME = (
+    "documents"
+)
+
 TOP_K = 3
+
 
 # ==========================================
 # EMBEDDING MODEL
@@ -40,11 +46,18 @@ print(
     "Embedding model loaded."
 )
 
+
 # ==========================================
 # CHROMADB
 # ==========================================
 
-client, collection, CHROMA_PATH = get_chroma_client_and_collection()
+client = chromadb.PersistentClient(
+    path=CHROMA_PATH
+)
+
+collection = client.get_collection(
+    name=COLLECTION_NAME
+)
 
 
 # ==========================================
@@ -233,7 +246,24 @@ ANSWER:
 """
 
 
-    return call_llm(prompt, model=OLLAMA_MODEL)
+    response = ollama.chat(
+
+        model=OLLAMA_MODEL,
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
+
+
+    return response[
+        "message"
+    ][
+        "content"
+    ]
 
 
 # ==========================================

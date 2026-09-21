@@ -15,7 +15,11 @@ sys.path.insert(
 )
 
 
-from src.rag.llm_client import call_llm
+# ==========================================
+# OLLAMA
+# ==========================================
+
+import ollama
 
 OLLAMA_MODEL = "llama3.2:latest"
 
@@ -171,17 +175,12 @@ STRICT RULES
     "No meaningful risk identified from
     the available document evidence."
 
-14. For financial, loan, or purchasing decisions:
-    - Evaluate Debt-to-Income (DTI) impact and monthly repayment affordability.
-    - Evaluate cash flow insolvency if monthly EMI exceeds or heavily burdens net income.
-    - Note risks of operational costs (maintenance, fuel, interest rates) and lack of emergency buffers.
-
-15. Keep the analysis concise, structured, and evidence-grounded.
+14. Keep the analysis concise and
+    evidence-grounded.
 
 ==================================================
 OUTPUT FORMAT
 ==================================================
-
 
 DOCUMENTED FACTS:
 
@@ -239,8 +238,25 @@ Those tasks belong to later agents.
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="risk")
+    response = ollama.chat(
+        model=OLLAMA_MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        options={
+            "temperature": 0
+        }
+    )
 
+
+    return response[
+        "message"
+    ][
+        "content"
+    ]
 
 
 # ==========================================

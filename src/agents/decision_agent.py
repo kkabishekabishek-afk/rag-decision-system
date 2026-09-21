@@ -16,7 +16,11 @@ sys.path.insert(
 )
 
 
-from src.rag.llm_client import call_llm
+# ==========================================
+# OLLAMA
+# ==========================================
+
+import ollama
 
 OLLAMA_MODEL = "llama3.2:latest"
 
@@ -415,45 +419,98 @@ State uncertainties explicitly.
 
 
 ==================================================
+OUTPUT FORMAT
 ==================================================
-OUTPUT FORMAT & MANDATORY VERDICT RULES
+
+DECISION:
+
+Give the most evidence-supported answer
+to the user's question.
+
+If the evidence is insufficient, say:
+
+"A definitive decision cannot be made from
+the available document evidence."
+
+
+SUPPORTING EVIDENCE:
+
+List the most relevant evidence from the
+documents.
+
+Use only evidence that actually supports
+the decision.
+
+
+RISKS:
+
+List important risks or limitations that
+affect the decision.
+
+Do not invent risks.
+
+
+UNCERTAINTIES:
+
+List important information that is missing,
+ambiguous, or uncertain.
+
+Remember:
+
+Missing information is NOT negative evidence.
+
+
+POSSIBLE SOLUTIONS:
+
+List relevant solutions or actions from the
+Solution Agent only when they are reasonably
+supported by the evidence.
+
+Clearly distinguish inferred solutions from
+solutions explicitly stated in the documents.
+
+
+CONCLUSION:
+
+Give a concise final conclusion.
+
+The conclusion must agree with the evidence,
+risks, and uncertainties.
+
+
+==================================================
+FINAL REQUIREMENT
 ==================================================
 
-1. TOP-LINE DIRECT VERDICT (MANDATORY FORMAT):
-Your response MUST start on the first line with an explicit, direct answer:
-- If SUITABLE:
-  `### 🎯 VERDICT: YES, SUITABLE`
-  `**Direct Answer:** YES, he is suitable for this role because he has [list exact skills, degrees, scores, and tools verified in the document].`
-- If NOT SUITABLE:
-  `### 🎯 VERDICT: NO, NOT SUITABLE`
-  `**Direct Answer:** NO, this is not suitable because [state exact reason: e.g., monthly loan payment of Rs. 13,692 exceeds monthly income of Rs. 2,667 / missing critical qualifications].`
-- If INSUFFICIENT DATA:
-  `### 🎯 VERDICT: CONDITIONALLY SUITABLE / INSUFFICIENT DATA`
-  `**Direct Answer:** Cannot confirm definitively because [exact missing variable].`
+The answer must remain domain-independent.
 
-2. MATHEMATICAL & FINANCIAL LOAN REASONING:
-If the user asks about loan affordability, EMI, tractor/vehicle/machinery purchase, or income suitability:
-- Identify stated income from the document (Gross, Net, Total) and whether it is Annual or Monthly.
-- If Annual: Calculate `Monthly Income = Annual Income / 12`.
-- Compare Monthly Income directly with the requested Monthly EMI.
-- Calculate Monthly Deficit/Surplus (`Monthly Income - Monthly EMI`) and Debt-to-Income (DTI) ratio.
-- Standard safe banking threshold is DTI <= 40%. If EMI > Monthly Income (DTI > 100%), state: "NO, it is NOT SUITABLE because the monthly payment exceeds monthly income."
-- Use clean plain text arithmetic like `Rs. 32,000 / 12 = Rs. 2,667 per month` (DO NOT use LaTeX equations or backslashes).
+Do not assume the document is a:
 
-3. SUPPORTING EVIDENCE:
-- Bullet points showing the exact verified qualifications, figures, and statements from the active document.
+- resume
+- business report
+- financial report
+- technical report
+- research paper
+- policy
+- contract
+- project report
 
-4. RISK & GAP ASSESSMENT:
-- Highlight genuine limitations or risks without making false assumptions.
+Determine the context only from the supplied
+documents and the user's question.
 
-5. ACTIONABLE NEXT STEPS:
-- Concrete next steps (e.g. technical interview coding round, role placement, or loan tenure adjustment).
+Never create a negative conclusion simply
+because information is missing.
 
-6. FINAL CONCLUSION (EXPLICIT REASONING):
-Provide a clear, decisive closing statement:
-`### 🏁 Conclusion:`
-`**YES, SUITABLE because:** [Summary of verified skills/metrics]` OR
-`**NO, NOT SUITABLE because:** [Summary of shortfall/missing requirements]`
+Prefer:
+
+"Insufficient evidence to determine X"
+
+over:
+
+"X is lacking"
+
+when the document does not explicitly
+establish that X is lacking.
 """
 
 
@@ -461,9 +518,25 @@ Provide a clear, decisive closing statement:
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="decision")
+    response = ollama.chat(
+        model=OLLAMA_MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        options={
+            "temperature": 0
+        }
+    )
 
 
+    return response[
+        "message"
+    ][
+        "content"
+    ]
 
 
 # ==========================================

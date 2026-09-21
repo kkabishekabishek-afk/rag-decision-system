@@ -15,7 +15,12 @@ sys.path.insert(
 )
 
 
-from src.rag.llm_client import call_llm
+# ==========================================
+# OLLAMA
+# ==========================================
+
+import ollama
+
 
 OLLAMA_MODEL = "llama3.2:latest"
 
@@ -269,15 +274,20 @@ definitive recommendation cannot be made.
 
 --------------------------------------------------
 
-10. FINANCIAL & LOAN SOLUTIONS:
-If the user is evaluating an unaffordable or high-risk loan/purchase:
-- Propose evidence-based mitigation options such as extending loan repayment tenure (to reduce monthly EMI), increasing upfront down payment, applying for government agricultural/business subsidies, machinery rental/leasing, or adding a qualified co-borrower.
+10. NUMERICAL CLAIMS
 
---------------------------------------------------
+Do not invent:
 
-11. NUMERICAL CLAIMS
+- scores
+- percentages
+- probabilities
+- rankings
+- measurements
+- financial values
+- performance values
 
-Do not invent unsupported financial figures. Use stated figures from context and clear arithmetic.
+unless they are explicitly present in
+the document evidence.
 
 ==================================================
 DOCUMENT EVIDENCE
@@ -401,8 +411,24 @@ over an unsupported recommendation.
     # CALL OLLAMA
     # ======================================
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="solution")
+    response = ollama.chat(
 
+        model=OLLAMA_MODEL,
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
+
+
+    return response[
+        "message"
+    ][
+        "content"
+    ]
 
 
 # ==========================================

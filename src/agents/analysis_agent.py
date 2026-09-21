@@ -10,7 +10,8 @@ sys.path.insert(
     str(PROJECT_ROOT)
 )
 
-from src.rag.llm_client import call_llm
+import ollama
+
 
 OLLAMA_MODEL = (
     "llama3.2:latest"
@@ -50,31 +51,122 @@ Source: {document['source']}
 """
 
     prompt = f"""
-You are the Analysis Agent in a general-purpose document-grounded RAG decision support system.
-Analyze ONLY the retrieved document context.
+You are the Analysis Agent in a
+document-grounded RAG decision
+support system.
+
+Analyze ONLY the retrieved
+document context.
 
 QUESTION:
+
 {question}
 
 RETRIEVED CONTEXT:
+
 {context}
 
-IMPORTANT RULES:
-1. Use ONLY information present in the retrieved context.
-2. Do NOT use outside knowledge or invent numbers/facts.
-3. Extract key facts, metrics, figures, financial values, entity details, and evidence directly from the document.
-4. For financial, loan, or income documents:
-   - Identify stated income (Gross, Net, Total), revenues, expenses, liabilities, and reporting periods (Annual, Monthly, Quarterly).
-   - If annual figures are given, explicitly compute and state the monthly equivalent (e.g., Annual Income / 12 = Monthly Income).
-5. For professional profiles or resumes:
-   - Extract explicitly listed technical skills, qualifications, tools, and project evidence objectively.
-6. Clearly separate facts directly stated in the document from derived numerical calculations.
-7. If requested information is not available in the context, clearly state that it is unavailable.
 
-Provide a concise, clearly formatted, and structured analysis.
+IMPORTANT RULES:
+
+1. Use ONLY information present
+   in the retrieved context.
+
+2. Do NOT use outside knowledge.
+
+3. Do NOT invent information.
+
+4. Do NOT make assumptions.
+
+5. Treat information according
+   to the section where it appears.
+
+6. "TECHNICAL SKILLS" means
+   technical skills.
+
+7. "AREA OF INTEREST" means
+   interests, NOT technical skills.
+
+8. "PROJECTS" can be used as
+   supporting evidence for skills,
+   but do not invent skills from
+   project names.
+
+9. If a technical skill is
+   explicitly listed, include it
+   even if it appears only once.
+
+10. Do NOT decide that a skill is
+    stronger simply because it is
+    repeated in multiple sources.
+
+11. Do NOT infer proficiency level
+    unless the document explicitly
+    states it.
+
+12. Do NOT classify personality
+    development or soft skills as
+    technical skills.
+
+13. Do NOT include a
+    "Skills Not Mentioned" section.
+
+14. Clearly separate facts directly
+    stated in the document from
+    supporting evidence.
+
+15. If the requested information
+    is not available in the context,
+    clearly state that it is not
+    available.
+
+
+For questions about technical
+skills:
+
+- Extract the technical skills
+  explicitly stated in the
+  TECHNICAL SKILLS section.
+
+- Group them according to the
+  categories shown in the document.
+
+- Use the professional summary
+  and projects only as supporting
+  evidence.
+
+- Do not confuse AREA OF INTEREST
+  with TECHNICAL SKILLS.
+
+- Do not rank skills unless the
+  document provides evidence for
+  ranking.
+
+
+Provide a concise and structured
+analysis.
 
 ANALYSIS:
 """
 
-    return call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0, agent_type="analysis")
-
+    response = ollama.chat(
+
+        model=OLLAMA_MODEL,
+
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+
+        options={
+            "temperature": 0
+        }
+    )
+
+    return response[
+        "message"
+    ][
+        "content"
+    ]

@@ -13,10 +13,30 @@ import chromadb
 from src.rag.loader import load_pdf
 from src.rag.chunker import chunk_documents
 from src.rag.embeddings import create_embeddings
-from src.rag.chroma_helper import get_chroma_client_and_collection
 
-client, collection, CHROMA_PATH = get_chroma_client_and_collection()
+
+# ==================================================
+# CONFIGURATION
+# ==================================================
+
+CHROMA_PATH = str(
+    PROJECT_ROOT / "data" / "chroma"
+)
+
 COLLECTION_NAME = "documents"
+
+
+# ==================================================
+# CHROMA CLIENT
+# ==================================================
+
+client = chromadb.PersistentClient(
+    path=CHROMA_PATH
+)
+
+collection = client.get_or_create_collection(
+    name=COLLECTION_NAME
+)
 
 
 # ==================================================

@@ -1,5 +1,6 @@
 import re
-from src.rag.llm_client import call_llm
+import ollama
+
 
 OLLAMA_MODEL = "llama3.2:latest"
 
@@ -33,19 +34,11 @@ def rule_based_classification(question):
         r"\badvantage\b",
         r"\bdisadvantage\b",
         r"\bdecision\b",
-        r"\bloan\b",
-        r"\bafford\b",
-        r"\bbuy\b",
-        r"\btractor\b",
-        r"\bemi\b",
-        r"\bcan i\b",
-        r"\bfeasible\b",
     ]
 
     for pattern in decision_patterns:
         if re.search(pattern, q):
             return "DECISION"
-
 
 
     # -------------------------------------------------
@@ -159,8 +152,17 @@ USER QUESTION:
 {question}
 """
 
-    response_text = call_llm(prompt, model=OLLAMA_MODEL, temperature=0.0)
-    result = response_text.strip().upper()
+    response = ollama.chat(
+        model=OLLAMA_MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
+
+    result = response["message"]["content"].strip().upper()
 
     # Exact matching only
     if result == "DECISION":
