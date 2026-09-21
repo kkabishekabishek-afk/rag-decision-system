@@ -3,6 +3,8 @@ from pathlib import Path
 
 from src.agents.adaptive_workflow import run_workflow
 from src.rag.vector_store import index_pdf
+from src.rag.chroma_helper import get_writable_documents_dir
+
 
 
 # ============================================================
@@ -148,20 +150,9 @@ if uploaded_file is not None:
         use_container_width=True
     ):
 
-        documents_folder = (
-            Path("data")
-            / "documents"
-        )
+        documents_folder = get_writable_documents_dir()
+        pdf_path = documents_folder / uploaded_file.name
 
-        documents_folder.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        pdf_path = (
-            documents_folder
-            / uploaded_file.name
-        )
 
         try:
 

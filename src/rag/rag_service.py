@@ -40,17 +40,11 @@ embedding_model = SentenceTransformer(
 print("Embedding model loaded.")
 
 
-# ==========================================
-# CHROMADB
-# ==========================================
+from src.rag.chroma_helper import get_chroma_client_and_collection, get_writable_chroma_path, COLLECTION_NAME
 
-client = chromadb.PersistentClient(
-    path=CHROMA_PATH
-)
+CHROMA_PATH = get_writable_chroma_path()
+client, collection = get_chroma_client_and_collection()
 
-collection = client.get_or_create_collection(
-    name=COLLECTION_NAME
-)
 
 
 # ==========================================

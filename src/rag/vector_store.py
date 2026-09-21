@@ -15,31 +15,11 @@ from src.rag.chunker import chunk_documents
 from src.rag.embeddings import create_embeddings
 
 
-# ==================================================
-# CONFIGURATION
-# ==================================================
+from src.rag.chroma_helper import get_chroma_client_and_collection, get_writable_chroma_path, COLLECTION_NAME
 
-import os
+CHROMA_PATH = get_writable_chroma_path()
+client, collection = get_chroma_client_and_collection()
 
-CHROMA_DIR = PROJECT_ROOT / "data" / "chroma"
-os.makedirs(CHROMA_DIR, exist_ok=True)
-CHROMA_PATH = str(CHROMA_DIR)
-
-COLLECTION_NAME = "documents"
-
-
-# ==================================================
-# CHROMA CLIENT
-# ==================================================
-
-client = chromadb.PersistentClient(
-    path=CHROMA_PATH
-)
-
-
-collection = client.get_or_create_collection(
-    name=COLLECTION_NAME
-)
 
 
 # ==================================================
@@ -47,8 +27,10 @@ collection = client.get_or_create_collection(
 # ==================================================
 
 def index_pdf(pdf_path):
-
+    global client, collection
+    client, collection = get_chroma_client_and_collection()
     pdf_path = Path(pdf_path)
+
 
     print(
         f"\nLoading: {pdf_path.name}"
