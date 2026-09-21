@@ -19,9 +19,11 @@ from src.rag.embeddings import create_embeddings
 # CONFIGURATION
 # ==================================================
 
-CHROMA_PATH = str(
-    PROJECT_ROOT / "data" / "chroma"
-)
+import os
+
+CHROMA_DIR = PROJECT_ROOT / "data" / "chroma"
+os.makedirs(CHROMA_DIR, exist_ok=True)
+CHROMA_PATH = str(CHROMA_DIR)
 
 COLLECTION_NAME = "documents"
 
@@ -33,6 +35,7 @@ COLLECTION_NAME = "documents"
 client = chromadb.PersistentClient(
     path=CHROMA_PATH
 )
+
 
 collection = client.get_or_create_collection(
     name=COLLECTION_NAME

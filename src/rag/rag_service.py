@@ -4,7 +4,7 @@ from sentence_transformers import (
     SentenceTransformer
 )
 
-import ollama
+from src.rag.llm_client import call_llm
 
 
 # ==========================================
@@ -246,24 +246,12 @@ ANSWER:
 """
 
 
-    response = ollama.chat(
-
+    return call_llm(
+        prompt,
         model=OLLAMA_MODEL,
-
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
+        temperature=0.0
     )
 
-
-    return response[
-        "message"
-    ][
-        "content"
-    ]
 
 
 # ==========================================

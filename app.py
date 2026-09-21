@@ -87,6 +87,13 @@ with st.sidebar:
     st.write("✅ Verification")
     st.write("✏️ Correction")
 
+    st.divider()
+    with st.expander("⚙️ Optional Settings"):
+        st.caption("Optional Groq API key for high-speed cloud inference:")
+        groq_k = st.text_input("Groq API Key", value=st.session_state.get("GROQ_API_KEY", ""), type="password", placeholder="gsk_...")
+        if groq_k:
+            st.session_state["GROQ_API_KEY"] = groq_k
+
 
 # ============================================================
 # DOCUMENT KNOWLEDGE BASE

@@ -10,8 +10,7 @@ sys.path.insert(
     str(PROJECT_ROOT)
 )
 
-import ollama
-
+from src.rag.llm_client import call_llm
 
 OLLAMA_MODEL = (
     "llama3.2:latest"
@@ -149,24 +148,8 @@ analysis.
 ANALYSIS:
 """
 
-    response = ollama.chat(
-
+    return call_llm(
+        prompt,
         model=OLLAMA_MODEL,
-
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-
-        options={
-            "temperature": 0
-        }
-    )
-
-    return response[
-        "message"
-    ][
-        "content"
-    ]
+        temperature=0.0
+    )

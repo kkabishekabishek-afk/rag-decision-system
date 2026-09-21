@@ -16,11 +16,7 @@ sys.path.insert(
 )
 
 
-# ==========================================
-# OLLAMA
-# ==========================================
-
-import ollama
+from src.rag.llm_client import call_llm
 
 OLLAMA_MODEL = "llama3.2:latest"
 
@@ -514,29 +510,12 @@ establish that X is lacking.
 """
 
 
-    # ======================================
-    # CALL OLLAMA
-    # ======================================
-
-    response = ollama.chat(
+    return call_llm(
+        prompt,
         model=OLLAMA_MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        options={
-            "temperature": 0
-        }
+        temperature=0.0
     )
 
-
-    return response[
-        "message"
-    ][
-        "content"
-    ]
 
 
 # ==========================================
