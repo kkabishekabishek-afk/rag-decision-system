@@ -16,11 +16,23 @@ def rule_based_classification(question):
     # DECISION
     # -------------------------------------------------
     decision_patterns = [
+        r"\bcan i\b",
+        r"\bcan we\b",
+        r"\bcan .* buy\b",
+        r"\bcan .* afford\b",
+        r"\bcan .* purchase\b",
+        r"\bcan .* take\b",
         r"\bis .* suitable\b",
         r"\bis .* a good fit\b",
+        r"\bis .* eligible\b",
+        r"\bis .* feasible\b",
+        r"\bis .* possible\b",
+        r"\bis .* viable\b",
         r"\bshould .* focus\b",
         r"\bshould .* choose\b",
         r"\bshould .* pursue\b",
+        r"\bshould .* buy\b",
+        r"\bshould .* invest\b",
         r"\bwhich .* should\b",
         r"\bwhich .* is better\b",
         r"\bwhich .* would be best\b",
@@ -33,7 +45,23 @@ def rule_based_classification(question):
         r"\badvantage\b",
         r"\bdisadvantage\b",
         r"\bdecision\b",
+        r"\bafford\b",
+        r"\bemi\b",
+        r"\bloan\b",
+        r"\bbuy\b",
+        r"\bpurchase\b",
+        r"\bviable\b",
+        r"\bfeasible\b",
+        r"\bfeasibility\b",
+        r"\bworth it\b",
+        r"\beligible\b",
+        r"\beligibility\b",
+        r"\bqualify\b",
+        r"\bapproval\b",
+        r"\bapprove\b",
+        r"\baccording to\b",
     ]
+
 
     for pattern in decision_patterns:
         if re.search(pattern, q):
