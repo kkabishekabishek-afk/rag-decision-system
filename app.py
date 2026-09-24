@@ -6,7 +6,6 @@ from src.rag.vector_store import index_pdf
 from src.rag.chroma_helper import get_writable_documents_dir
 
 
-
 # ============================================================
 # PAGE CONFIGURATION
 # ============================================================
@@ -19,25 +18,17 @@ st.set_page_config(
 
 
 # ============================================================
-# ACTIVE DOCUMENT STATE
+# SESSION STATE
 # ============================================================
 
 if "active_document" not in st.session_state:
     st.session_state.active_document = None
 
+if "agent_activity" not in st.session_state:
+    st.session_state.agent_activity = []
 
-# ============================================================
-# TITLE
-# ============================================================
-
-st.title(
-    "🤖 Self-Adaptive Multi-Agent RAG"
-)
-
-st.caption(
-    "Intelligent Document Analysis and Decision Support "
-    "using RAG, Multi-Agent Architecture and Ollama"
-)
+if "last_result" not in st.session_state:
+    st.session_state.last_result = None
 
 
 # ============================================================
@@ -50,83 +41,182 @@ with st.sidebar:
 
     st.markdown(
         """
-        **Adaptive Workflow**
+**Adaptive Workflow**
 
-        📄 Document Upload  
-        ↓  
-        🧩 Document Processing  
-        ↓  
-        🗄️ ChromaDB Knowledge Base  
-        ↓  
-        🔀 Query Router  
-        ↓  
-        🔎 Retriever  
-        ↓  
-        🧠 Analysis Agent  
-        ↓  
-        ⚠️ Risk Agent  
-        ↓  
-        💡 Solution / Decision  
-        ↓  
-        ✅ Verification  
-        ↓  
-        ✏️ Correction  
-        ↓  
-        💬 Final Answer
-        """
+📄 Document  
+↓  
+🧩 Processing  
+↓  
+🗄️ ChromaDB  
+↓  
+🔀 Router  
+↓  
+🔎 Retriever  
+↓  
+🧠 Analysis  
+↓  
+⚠️ Risk  
+↓  
+💡 Solution  
+↓  
+🎯 Decision  
+↓  
+✅ Verification  
+↓  
+✏️ Correction  
+↓  
+💬 Final Answer
+"""
     )
 
     st.divider()
 
-    st.subheader("Agents")
+    # ========================================================
+    # ACTIVE DOCUMENT
+    # ========================================================
 
-    st.write("🔀 Router")
-    st.write("🔎 Retriever")
-    st.write("🧠 Analysis")
-    st.write("⚠️ Risk")
-    st.write("💡 Solution")
-    st.write("🎯 Decision")
-    st.write("✅ Verification")
-    st.write("✏️ Correction")
+    st.subheader("📄 Active Document")
+
+    if st.session_state.active_document:
+
+        st.success(
+            st.session_state.active_document
+        )
+
+    else:
+
+        st.info(
+            "No document selected."
+        )
+
 
     st.divider()
-    with st.expander("⚙️ Optional Settings"):
-        st.caption("Optional Groq API key for high-speed cloud inference:")
-        groq_k = st.text_input("Groq API Key", value=st.session_state.get("GROQ_API_KEY", ""), type="password", placeholder="gsk_...")
-        if groq_k:
-            st.session_state["GROQ_API_KEY"] = groq_k
+
+    # ========================================================
+    # AGENT ACTIVITY
+    # ========================================================
+
+    st.subheader("🤖 Agent Activity")
+
+    activities = (
+        st.session_state.agent_activity
+    )
+
+    if activities:
+
+        for item in activities:
+
+            agent = item.get(
+                "agent",
+                "Agent"
+            )
+
+            status = item.get(
+                "status",
+                "unknown"
+            )
+
+            description = item.get(
+                "description",
+                ""
+            )
+
+            if status == "completed":
+
+                st.markdown(
+                    f"**{agent}**"
+                )
+
+                st.caption(
+                    f"✅ {description}"
+                )
+
+            elif status == "skipped":
+
+                st.markdown(
+                    f"**{agent}**"
+                )
+
+                st.caption(
+                    f"⏭️ {description}"
+                )
+
+            else:
+
+                st.markdown(
+                    f"**{agent}**"
+                )
+
+                st.caption(
+                    description
+                )
+
+    else:
+
+        st.caption(
+            "Agent activity will appear here "
+            "after a question is processed."
+        )
+
+
+    st.divider()
+
+    # ========================================================
+    # SIMPLE SETTINGS
+    # ========================================================
+
+    with st.expander(
+        "⚙️ Optional Settings"
+    ):
+
+        st.caption(
+            "Workflow settings"
+        )
+
+        st.checkbox(
+            "Strict document grounding",
+            value=True,
+            disabled=True
+        )
+
+        st.checkbox(
+            "Show agent activity",
+            value=True,
+            disabled=True
+        )
+
+        st.caption(
+            "Adaptive routing automatically selects "
+            "the required agents."
+        )
+
+
+# ============================================================
+# MAIN TITLE
+# ============================================================
+
+st.title(
+    "🤖 Self-Adaptive Multi-Agent RAG"
+)
+
+st.caption(
+    "Document-grounded intelligent decision support "
+    "using RAG, multi-agent reasoning and Ollama"
+)
 
 
 # ============================================================
 # DOCUMENT KNOWLEDGE BASE
 # ============================================================
 
-st.header("📚 Document Knowledge Base")
-
-st.write(
-    "Upload a PDF document once. "
-    "The uploaded document becomes the active document. "
-    "All questions will use only the active document."
+st.header(
+    "📚 Document Knowledge Base"
 )
 
-
-# ============================================================
-# ACTIVE DOCUMENT DISPLAY
-# ============================================================
-
-if st.session_state.active_document:
-
-    st.success(
-        f"📄 Active document: "
-        f"{st.session_state.active_document}"
-    )
-
-else:
-
-    st.info(
-        "No active document. "
-        "Please upload and process a PDF."
-    )
+st.write(
+    "Upload a PDF once. It becomes the active document "
+    "for subsequent questions."
+)
 
 
 # ============================================================
@@ -150,15 +240,16 @@ if uploaded_file is not None:
         use_container_width=True
     ):
 
-        documents_folder = get_writable_documents_dir()
-        pdf_path = documents_folder / uploaded_file.name
+        documents_folder = (
+            get_writable_documents_dir()
+        )
 
+        pdf_path = (
+            documents_folder
+            / uploaded_file.name
+        )
 
         try:
-
-            # ------------------------------------------------
-            # Save PDF
-            # ------------------------------------------------
 
             with open(
                 pdf_path,
@@ -170,10 +261,6 @@ if uploaded_file is not None:
                 )
 
 
-            # ------------------------------------------------
-            # Index PDF
-            # ------------------------------------------------
-
             with st.spinner(
                 "Processing document..."
             ):
@@ -183,28 +270,17 @@ if uploaded_file is not None:
                 )
 
 
-            # ------------------------------------------------
-            # SET ACTIVE DOCUMENT
-            # ------------------------------------------------
-
             st.session_state.active_document = (
                 result["source"]
             )
 
+            st.session_state.agent_activity = []
 
-            # ------------------------------------------------
-            # Success
-            # ------------------------------------------------
-
-            st.success(
-                "✅ Document indexed successfully!"
-            )
+            st.session_state.last_result = None
 
             st.success(
-                f"📄 Active document: "
-                f"{result['source']}"
+                "✅ Document indexed successfully."
             )
-
 
             col1, col2, col3 = st.columns(3)
 
@@ -240,8 +316,16 @@ if uploaded_file is not None:
 
 
 # ============================================================
-# SEPARATOR
+# ACTIVE DOCUMENT
 # ============================================================
+
+if st.session_state.active_document:
+
+    st.success(
+        f"🔒 Active document: "
+        f"{st.session_state.active_document}"
+    )
+
 
 st.divider()
 
@@ -250,22 +334,20 @@ st.divider()
 # ASK QUESTION
 # ============================================================
 
-st.header("💬 Ask Questions")
+st.header(
+    "💬 Ask Questions"
+)
 
 if st.session_state.active_document:
 
-    st.write(
-        "Ask questions about the active document:"
-    )
-
-    st.info(
-        f"🔒 Questions are restricted to: "
+    st.caption(
+        f"Questions are restricted to: "
         f"{st.session_state.active_document}"
     )
 
 else:
 
-    st.write(
+    st.info(
         "Upload and process a PDF before asking questions."
     )
 
@@ -273,8 +355,9 @@ else:
 question = st.text_area(
     "Enter your question:",
     placeholder=(
-        "Example: What are the major risks "
-        "identified in the document?"
+        "Example: According to the income in the "
+        "document, can I buy a laptop with an EMI "
+        "of ₹13,300 per month?"
     ),
     height=100
 )
@@ -292,20 +375,11 @@ ask_button = st.button(
 
 if ask_button:
 
-    # --------------------------------------------------------
-    # CHECK QUESTION
-    # --------------------------------------------------------
-
     if not question.strip():
 
         st.warning(
             "Please enter a question."
         )
-
-
-    # --------------------------------------------------------
-    # CHECK ACTIVE DOCUMENT
-    # --------------------------------------------------------
 
     elif not st.session_state.active_document:
 
@@ -313,26 +387,16 @@ if ask_button:
             "Please upload and process a PDF first."
         )
 
-
-    # --------------------------------------------------------
-    # RUN WORKFLOW
-    # --------------------------------------------------------
-
     else:
+
+        active_document = (
+            st.session_state.active_document
+        )
 
         try:
 
-            active_document = (
-                st.session_state.active_document
-            )
-
-
-            # ------------------------------------------------
-            # Run workflow
-            # ------------------------------------------------
-
             with st.spinner(
-                "Running adaptive multi-agent workflow..."
+                "Running adaptive workflow..."
             ):
 
                 result = run_workflow(
@@ -341,198 +405,43 @@ if ask_button:
                 )
 
 
-            # =================================================
-            # WORKFLOW TYPE
-            # =================================================
+            # ================================================
+            # SAVE RESULT
+            # ================================================
+
+            st.session_state.last_result = result
+
+            st.session_state.agent_activity = (
+                result.get(
+                    "activities",
+                    []
+                )
+            )
+
+
+            # ================================================
+            # QUERY TYPE
+            # ================================================
 
             st.divider()
-
-            st.header(
-                "🔄 Adaptive Workflow"
-            )
-
-
-            st.info(
-                f"📄 Active Document: "
-                f"{active_document}"
-            )
-
 
             query_type = result.get(
                 "query_type",
                 "UNKNOWN"
             )
 
-
-            if query_type == "SIMPLE":
-
-                st.success(
-                    "🔀 Query Type: SIMPLE"
-                )
-
-            elif query_type == "ANALYTICAL":
-
-                st.success(
-                    "🔀 Query Type: ANALYTICAL"
-                )
-
-            elif query_type == "DECISION":
-
-                st.success(
-                    "🔀 Query Type: DECISION"
-                )
-
-            else:
-
-                st.warning(
-                    f"🔀 Query Type: {query_type}"
-                )
-
-
-            # =================================================
-            # AGENT STATUS
-            # =================================================
-
             st.subheader(
-                "Agent Execution"
+                "🔄 Workflow"
+            )
+
+            st.info(
+                f"Query Type: **{query_type}**"
             )
 
 
-            if query_type == "SIMPLE":
-
-                st.write(
-                    "🔀 Router Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "🔎 Retriever Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "💬 Answer Generator — ✅ Completed"
-                )
-
-                st.write(
-                    "🧠 Analysis Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "⚠️ Risk Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "💡 Solution Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "🎯 Decision Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "✅ Verification Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "✏️ Correction Agent — ⏭️ Skipped"
-                )
-
-
-            elif query_type == "ANALYTICAL":
-
-                st.write(
-                    "🔀 Router Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "🔎 Retriever Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "🧠 Analysis Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "⚠️ Risk Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "💡 Solution Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "🎯 Decision Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "✅ Verification Agent — ⏭️ Skipped"
-                )
-
-                st.write(
-                    "✏️ Correction Agent — ⏭️ Skipped"
-                )
-
-
-            elif query_type == "DECISION":
-
-                st.write(
-                    "🔀 Router Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "🔎 Retriever Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "🧠 Analysis Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "⚠️ Risk Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "💡 Solution Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "🎯 Decision Agent — ✅ Completed"
-                )
-
-                st.write(
-                    "✅ Verification Agent — "
-                    "✅ Completed"
-                )
-
-
-                verification = result.get(
-                    "verification",
-                    ""
-                )
-
-
-                if (
-                    "NEEDS_CORRECTION"
-                    in str(
-                        verification
-                    ).upper()
-                ):
-
-                    st.write(
-                        "✏️ Correction Agent — "
-                        "✅ Completed"
-                    )
-
-                else:
-
-                    st.write(
-                        "✏️ Correction Agent — "
-                        "⏭️ Skipped"
-                    )
-
-
-            # =================================================
+            # ================================================
             # FINAL ANSWER
-            # =================================================
+            # ================================================
 
             st.divider()
 
@@ -540,12 +449,10 @@ if ask_button:
                 "💬 Final Answer"
             )
 
-
             answer = result.get(
                 "answer",
                 ""
             )
-
 
             if answer:
 
@@ -560,24 +467,22 @@ if ask_button:
                 )
 
 
-            # =================================================
-            # RETRIEVED SOURCES
-            # =================================================
+            # ================================================
+            # SOURCES
+            # ================================================
 
             documents = result.get(
                 "documents",
                 []
             )
 
-
             if documents:
 
                 st.divider()
 
                 st.header(
-                    "📚 Retrieved Sources"
+                    "📚 Evidence"
                 )
-
 
                 for i, document in enumerate(
                     documents,
@@ -594,7 +499,6 @@ if ask_button:
                         "?"
                     )
 
-
                     with st.expander(
                         f"Source {i} — "
                         f"{source_name} "
@@ -609,137 +513,90 @@ if ask_button:
                         )
 
 
-            # =================================================
-            # ANALYSIS
-            # =================================================
+            # ================================================
+            # TECHNICAL DETAILS
+            # ================================================
 
             if query_type == "DECISION":
 
-                analysis = result.get(
-                    "analysis",
-                    ""
-                )
-
-
-                if analysis:
-
-                    st.divider()
-
-                    st.header(
-                        "🧠 Analysis"
-                    )
+                with st.expander(
+                    "🧠 Analysis Details"
+                ):
 
                     st.write(
-                        analysis
+                        result.get(
+                            "analysis",
+                            "Not available."
+                        )
                     )
 
-
-            # =================================================
-            # RISK
-            # =================================================
-
-            if query_type == "DECISION":
 
                 risk = result.get(
                     "risk",
                     ""
                 )
 
-
                 if risk:
 
-                    st.divider()
+                    with st.expander(
+                        "⚠️ Risk Details"
+                    ):
 
-                    st.header(
-                        "⚠️ Risk Analysis"
-                    )
+                        st.write(
+                            risk
+                        )
 
-                    st.write(
-                        risk
-                    )
-
-
-            # =================================================
-            # SOLUTION
-            # =================================================
-
-            if query_type == "DECISION":
 
                 solution = result.get(
                     "solution",
                     ""
                 )
 
-
                 if solution:
 
-                    st.divider()
+                    with st.expander(
+                        "💡 Solution Details"
+                    ):
 
-                    st.header(
-                        "💡 Possible Solutions"
-                    )
+                        st.write(
+                            solution
+                        )
 
-                    st.write(
-                        solution
-                    )
-
-
-            # =================================================
-            # DECISION
-            # =================================================
-
-            if query_type == "DECISION":
 
                 decision = result.get(
                     "decision",
                     ""
                 )
 
-
                 if decision:
 
-                    st.divider()
+                    with st.expander(
+                        "🎯 Decision Details"
+                    ):
 
-                    st.header(
-                        "🎯 Decision"
-                    )
+                        st.write(
+                            decision
+                        )
 
-                    st.write(
-                        decision
-                    )
-
-
-            # =================================================
-            # VERIFICATION
-            # =================================================
-
-            if query_type == "DECISION":
 
                 verification = result.get(
                     "verification",
                     ""
                 )
 
-
                 if verification:
 
-                    st.divider()
+                    with st.expander(
+                        "✅ Verification Details"
+                    ):
 
-                    st.header(
-                        "✅ Verification"
-                    )
+                        st.write(
+                            verification
+                        )
 
-                    st.write(
-                        verification
-                    )
-
-
-            # =================================================
-            # SYSTEM COMPLETE
-            # =================================================
 
             st.success(
-                "✅ Workflow completed successfully."
+                "✅ Workflow completed."
             )
 
 

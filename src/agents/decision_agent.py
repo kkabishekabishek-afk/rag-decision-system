@@ -1,29 +1,17 @@
 from pathlib import Path
 import sys
 
-
-# ==========================================
-# PROJECT PATH
-# ==========================================
-
-PROJECT_ROOT = Path(
-    __file__
-).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 sys.path.insert(
     0,
     str(PROJECT_ROOT)
 )
 
-
 from src.rag.llm_client import call_llm
 
 OLLAMA_MODEL = "llama3.2:latest"
 
-
-# ==========================================
-# DECISION AGENT
-# ==========================================
 
 def decision_agent(
     question,
@@ -32,10 +20,6 @@ def decision_agent(
     risk_analysis,
     solution
 ):
-
-    # ======================================
-    # BUILD DOCUMENT EVIDENCE
-    # ======================================
 
     evidence = ""
 
@@ -60,37 +44,20 @@ Content:
 """
 
 
-    # ======================================
-    # DECISION PROMPT
-    # ======================================
-
     prompt = f"""
 You are the Decision Agent in a
 general-purpose document-grounded
 decision-support system.
 
-The system can analyze ANY type of
-document and ANY type of decision.
+Your job is to directly answer the
+user's question using:
 
-Examples include:
+1. Document evidence
+2. Explicit user-provided information
+3. Calculations required by the question
 
-- business documents
-- financial reports
-- project reports
-- technical documents
-- research papers
-- policies
-- contracts
-- proposals
-- assessments
-- resumes
-- multiple related documents
-
-Do NOT assume a specific domain.
-
-Your responsibility is to make the most
-evidence-grounded decision possible using
-the supplied document evidence.
+Do NOT require every value in the question
+to appear in the document.
 
 ==================================================
 USER QUESTION
@@ -107,7 +74,7 @@ DOCUMENT EVIDENCE
 
 
 ==================================================
-ANALYSIS AGENT OUTPUT
+ANALYSIS
 ==================================================
 
 {analysis}
@@ -121,392 +88,233 @@ RISK ANALYSIS
 
 
 ==================================================
-SOLUTION AGENT OUTPUT
+POSSIBLE SOLUTIONS
 ==================================================
 
 {solution}
 
 
 ==================================================
-CORE DECISION RULES
+IMPORTANT RULES
 ==================================================
 
-1. DOCUMENT EVIDENCE IS THE PRIMARY SOURCE
+1. DOCUMENT FACTS
 
-Use the retrieved document evidence as the
-factual foundation of the decision.
-
-Do not introduce facts that are not present
-in the supplied evidence.
+Use the document as the source for facts
+about the subject of the document.
 
 
---------------------------------------------------
-2. NO OUTSIDE KNOWLEDGE
---------------------------------------------------
+2. USER INPUT
 
-Do not use outside knowledge to establish
-facts about the document, person, organization,
-project, product, system, event, or situation.
+If the user explicitly provides a value
+in the question, such as:
 
+- price
+- EMI
+- salary
+- cost
+- loan amount
+- interest rate
+- duration
+- budget
+- quantity
 
---------------------------------------------------
-3. NEVER INVENT FACTS
---------------------------------------------------
+you MAY use that value in the reasoning.
 
-Never invent:
+Do NOT say:
 
-- facts
-- events
-- capabilities
-- experience
-- outcomes
-- measurements
-- financial values
-- performance values
-- scores
-- percentages
-- probabilities
-- rankings
+"The value is not in the document"
+
+when the value was explicitly supplied
+by the user.
 
 
---------------------------------------------------
-4. MISSING INFORMATION IS NOT NEGATIVE
---------------------------------------------------
+3. CALCULATIONS
 
-This is one of the most important rules.
+If the user asks a question requiring
+calculation, perform the calculation.
 
-If the document does not mention something,
-that does NOT mean the thing is absent.
+Examples:
 
-For example:
+monthly amount × 12
 
-"The document does not mention X."
+annual amount ÷ 12
 
-does NOT mean:
+revenue - expense
+
+profit / revenue
+
+loan amount = price - down payment
+
+Do arithmetic carefully.
+
+
+4. TIME PERIOD
+
+Pay close attention to:
+
+annual
+monthly
+quarterly
+weekly
+daily
+
+Never silently change the period.
+
+If the document does not establish the
+period required for the decision, clearly
+state the uncertainty.
+
+
+5. DO NOT INVENT NUMBERS
+
+Only use:
+
+- numbers from the document
+- numbers explicitly supplied by the user
+
+Do not invent missing values.
+
+
+6. MISSING INFORMATION
+
+Missing information is not negative evidence.
+
+Do not say:
 
 "X does not exist."
 
 Instead say:
 
-"The available documents do not provide
-enough information to determine X."
+"The available information does not
+establish X."
 
 
---------------------------------------------------
-5. SEPARATE FACT FROM INFERENCE
---------------------------------------------------
+7. DIRECTLY ANSWER THE QUESTION
 
-Distinguish between:
+Do not produce a generic essay.
 
-DOCUMENTED FACT
-
-A fact explicitly supported by the document.
-
-INFERENCE
-
-A reasonable conclusion derived from
-documented facts.
-
-RECOMMENDATION
-
-An option that appears appropriate based
-on the evidence.
-
-Do not present an inference as a documented
-fact.
+The first part of the answer should
+directly answer the user's question.
 
 
---------------------------------------------------
-6. DO NOT FORCE A DECISION
---------------------------------------------------
+8. EXPLAIN THE CALCULATION
 
-If the evidence is sufficient, make a
-decision.
-
-If the evidence is insufficient, clearly say:
-
-"A definitive decision cannot be made from
-the available document evidence."
+When a calculation is required, show
+the important calculation briefly.
 
 
---------------------------------------------------
-7. DECISION MUST FOLLOW THE QUESTION
---------------------------------------------------
+9. DISTINGUISH CONFIDENCE
 
-The decision must directly answer the
-user's question.
-
-Do not answer a different question.
-
-Do not add unrelated recommendations.
+If the decision depends on an unstated
+assumption, explicitly identify it.
 
 
---------------------------------------------------
-8. USE ANALYSIS AND RISK AS SUPPORTING INPUT
---------------------------------------------------
+10. DOCUMENT-ONLY FACTUAL GROUNDING
 
-The Analysis Agent and Risk Agent outputs
-are reasoning inputs.
-
-However, they are NOT automatically facts.
-
-Check their claims against the original
-document evidence.
-
-If an agent makes an unsupported claim,
-do not use that claim as the basis for
-the decision.
-
-
---------------------------------------------------
-9. EVALUATE SOLUTIONS CAREFULLY
---------------------------------------------------
-
-The Solution Agent may provide:
-
-- possible actions
-- possible options
-- recommendations
-- inferred solutions
-
-Do not blindly accept them.
-
-A proposed solution must have a reasonable
-connection to the evidence.
-
-If a solution is unsupported, do not use it
-as the basis for the final decision.
-
-
---------------------------------------------------
-10. DO NOT MAKE PERSONALITY JUDGMENTS
---------------------------------------------------
-
-Do not infer:
-
-- personality
-- attitude
-- communication ability
-- leadership ability
-- motivation
-- reliability
-- behavior
-- intelligence
-
-unless the supplied evidence explicitly
-supports the claim.
-
-
---------------------------------------------------
-11. DO NOT TURN ABSENCE INTO FAILURE
---------------------------------------------------
-
-The absence of evidence is not evidence of
-failure.
-
-For example:
-
-Incorrect:
-"The document does not mention experience,
-therefore the subject has no experience."
-
-Correct:
-"The available document does not provide
-evidence about experience."
-
-
---------------------------------------------------
-12. HANDLE CONFLICTING EVIDENCE
---------------------------------------------------
-
-If different documents contain conflicting
-information:
-
-- identify the conflict
-- do not silently choose one
-- explain that the evidence is inconsistent
-- reduce confidence in the decision
-
-If the conflict prevents a reliable decision,
-state that a definitive decision cannot be made.
-
-
---------------------------------------------------
-13. HANDLE MULTIPLE DOCUMENTS
---------------------------------------------------
-
-When multiple documents are supplied,
-consider evidence across all relevant
-documents.
-
-Do not assume that one document contains
-all available information.
-
-
---------------------------------------------------
-14. UNCERTAINTY MUST BE EXPLICIT
---------------------------------------------------
-
-If important information is unknown,
-identify it under UNCERTAINTIES.
-
-Do not hide uncertainty behind a confident
-decision.
-
-
---------------------------------------------------
-15. NUMERICAL CLAIMS
---------------------------------------------------
-
-Only use numerical values that appear
-explicitly in the supplied evidence.
-
-Do not calculate or invent scores,
-percentages, probabilities, rankings,
-or measurements unless the user explicitly
-asks for a calculation and the required
-numbers are available.
+Do not introduce external financial,
+medical, legal, technical or other
+domain facts unless they are supplied
+by the document or user.
 
 
 ==================================================
 DECISION PROCESS
 ==================================================
 
-Before producing the final answer, internally
-follow this process:
+STEP 1:
+Understand exactly what the user wants.
 
-STEP 1
+STEP 2:
+Extract relevant document values.
 
-Identify the exact decision requested
-by the user.
+STEP 3:
+Extract explicit user-provided values.
 
+STEP 4:
+Determine whether calculation is required.
 
-STEP 2
+STEP 5:
+Perform the calculation if the required
+values are available.
 
-Identify the strongest evidence relevant
-to that decision.
+STEP 6:
+Check units and time periods.
 
+STEP 7:
+Determine whether the available evidence
+supports a clear answer.
 
-STEP 3
-
-Identify important risks and limitations.
-
-
-STEP 4
-
-Check whether the evidence is sufficient
-for a reliable decision.
-
-
-STEP 5
-
-Consider possible solutions or options
-only when they are supported by evidence.
-
-
-STEP 6
-
-Determine the most defensible decision.
-
-
-STEP 7
-
-State uncertainties explicitly.
-
+STEP 8:
+If something essential is missing,
+state exactly what is missing.
 
 ==================================================
 OUTPUT FORMAT
 ==================================================
 
-DECISION:
+ANSWER:
 
-Give the most evidence-supported answer
-to the user's question.
+Give the direct answer first.
 
-If the evidence is insufficient, say:
+CALCULATION:
 
-"A definitive decision cannot be made from
-the available document evidence."
+Show the relevant calculation if required.
 
+DOCUMENT EVIDENCE:
 
-SUPPORTING EVIDENCE:
+List the document facts used.
 
-List the most relevant evidence from the
-documents.
+USER INPUT:
 
-Use only evidence that actually supports
-the decision.
+List important values supplied by the user.
 
+UNCERTAINTY:
 
-RISKS:
-
-List important risks or limitations that
-affect the decision.
-
-Do not invent risks.
-
-
-UNCERTAINTIES:
-
-List important information that is missing,
-ambiguous, or uncertain.
-
-Remember:
-
-Missing information is NOT negative evidence.
-
-
-POSSIBLE SOLUTIONS:
-
-List relevant solutions or actions from the
-Solution Agent only when they are reasonably
-supported by the evidence.
-
-Clearly distinguish inferred solutions from
-solutions explicitly stated in the documents.
-
+Only list genuinely missing information.
 
 CONCLUSION:
 
-Give a concise final conclusion.
-
-The conclusion must agree with the evidence,
-risks, and uncertainties.
-
+Give a short direct conclusion.
 
 ==================================================
-FINAL REQUIREMENT
+EXAMPLE
 ==================================================
 
-The answer must remain domain-independent.
+If the document says:
 
-Do not assume the document is a:
+Annual net income = $32,000
 
-- resume
-- business report
-- financial report
-- technical report
-- research paper
-- policy
-- contract
-- project report
+and the user asks:
 
-Determine the context only from the supplied
-documents and the user's question.
+"Can I buy a laptop with an EMI of
+$13,300 per month?"
 
-Never create a negative conclusion simply
-because information is missing.
+The correct reasoning is:
 
-Prefer:
+Annual EMI = $13,300 × 12
+Annual EMI = $159,600
 
-"Insufficient evidence to determine X"
+Then compare the relevant periods.
 
-over:
+Do NOT reject the question merely because
+$13,300 is not written in the document.
 
-"X is lacking"
+However, if the document does not establish
+whether $32,000 is annual or monthly,
+state that this affects the conclusion.
 
-when the document does not explicitly
-establish that X is lacking.
+==================================================
+FINAL RULE
+==================================================
+
+Be direct.
+
+Do not repeat the same evidence multiple times.
+
+Do not produce unnecessary sections.
+
+Answer the actual question.
 """
 
 
@@ -517,12 +325,6 @@ establish that X is lacking.
         agent_type="DECISION"
     )
 
-
-
-
-# ==========================================
-# TEST
-# ==========================================
 
 if __name__ == "__main__":
 

@@ -1,9 +1,7 @@
 from pathlib import Path
 import sys
 
-PROJECT_ROOT = Path(
-    __file__
-).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 sys.path.insert(
     0,
@@ -12,9 +10,7 @@ sys.path.insert(
 
 from src.rag.llm_client import call_llm
 
-OLLAMA_MODEL = (
-    "llama3.2:latest"
-)
+OLLAMA_MODEL = "llama3.2:latest"
 
 
 def analysis_agent(
@@ -24,10 +20,6 @@ def analysis_agent(
 
     print(
         "\n[ANALYSIS AGENT]"
-    )
-
-    print(
-        "Analyzing retrieved information..."
     )
 
     context = ""
@@ -40,112 +32,111 @@ def analysis_agent(
         context += f"""
 SOURCE {i}
 
-Page: {document['page']}
+Page: {document.get("page", "Unknown")}
 
-Source: {document['source']}
+Source: {document.get("source", "Unknown")}
 
-{document['text']}
+{document.get("text", "")}
 
 --------------------------------
 """
 
+
     prompt = f"""
 You are the Analysis Agent in a
-document-grounded RAG decision
-support system.
+general-purpose document-grounded
+decision-support system.
 
-Analyze ONLY the retrieved
-document context.
+Analyze the user's question together
+with the retrieved document evidence.
 
-QUESTION:
+USER QUESTION:
 
 {question}
 
-RETRIEVED CONTEXT:
+
+DOCUMENT EVIDENCE:
 
 {context}
 
 
 IMPORTANT RULES:
 
-1. Use ONLY information present
-   in the retrieved context.
+1. Use the document as the factual source.
 
-2. Do NOT use outside knowledge.
+2. The user's question may contain additional
+   values or conditions that are NOT in the
+   document.
 
-3. Do NOT invent information.
+3. Do NOT reject a question simply because
+   a value supplied by the user is not in
+   the document.
 
-4. Do NOT make assumptions.
+4. Treat explicit values supplied in the
+   user's question as USER-PROVIDED INPUT.
 
-5. Treat information according
-   to the section where it appears.
+5. Clearly distinguish:
 
-6. "TECHNICAL SKILLS" means
-   technical skills.
+   DOCUMENT FACTS
+   USER-PROVIDED INPUT
+   MISSING INFORMATION
+   INFERENCES
 
-7. "AREA OF INTEREST" means
-   interests, NOT technical skills.
+6. Extract important numerical values when
+   present.
 
-8. "PROJECTS" can be used as
-   supporting evidence for skills,
-   but do not invent skills from
-   project names.
+7. Preserve units.
 
-9. If a technical skill is
-   explicitly listed, include it
-   even if it appears only once.
+8. Preserve the time period of values when
+   the document provides one.
 
-10. Do NOT decide that a skill is
-    stronger simply because it is
-    repeated in multiple sources.
+9. If the document says a value is annual,
+   monthly, quarterly, etc., preserve that.
 
-11. Do NOT infer proficiency level
-    unless the document explicitly
-    states it.
+10. Do NOT assume a missing time period.
 
-12. Do NOT classify personality
-    development or soft skills as
-    technical skills.
+11. If the question requires arithmetic,
+    identify the values required for the
+    calculation.
 
-13. Do NOT include a
-    "Skills Not Mentioned" section.
+12. Calculations may use:
+    - document values
+    - explicit user-provided values
 
-14. Clearly separate facts directly
-    stated in the document from
-    supporting evidence.
+13. Do not invent missing numbers.
 
-15. If the requested information
-    is not available in the context,
-    clearly state that it is not
-    available.
+14. Missing information is not negative evidence.
 
+15. Do not make the final decision.
 
-For questions about technical
-skills:
+16. Keep the analysis concise.
 
-- Extract the technical skills
-  explicitly stated in the
-  TECHNICAL SKILLS section.
+OUTPUT FORMAT:
 
-- Group them according to the
-  categories shown in the document.
+DOCUMENT FACTS:
 
-- Use the professional summary
-  and projects only as supporting
-  evidence.
+- Relevant facts from the document.
 
-- Do not confuse AREA OF INTEREST
-  with TECHNICAL SKILLS.
+USER-PROVIDED INPUT:
 
-- Do not rank skills unless the
-  document provides evidence for
-  ranking.
+- Values or conditions explicitly supplied
+  in the question.
 
+CALCULATION REQUIREMENTS:
 
-Provide a concise and structured
-analysis.
+- Explain what calculation is required,
+  if any.
 
-ANALYSIS:
+MISSING INFORMATION:
+
+- Information required but genuinely unavailable.
+
+REASONING:
+
+- Explain how the document facts and user
+  inputs relate to the question.
+
+Do not provide a final recommendation.
 """
 
     return call_llm(
@@ -154,4 +145,10 @@ ANALYSIS:
         temperature=0.0,
         agent_type="ANALYSIS"
     )
-
+
+
+if __name__ == "__main__":
+
+    print(
+        "Analysis Agent loaded successfully."
+    )
