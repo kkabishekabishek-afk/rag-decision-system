@@ -3,3 +3,7 @@ __pycache__/
 .venv/
 data/chroma/
 
+.venv/
+__pycache__/
+*.pyc
+.env
